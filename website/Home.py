@@ -17,16 +17,7 @@ with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/115px-Python-logo-notext.svg.png", width=60)
     st.title("Course Navigation")
     st.markdown("---")
-    st.markdown("""
-**Lessons:**
-1. [Python as Your Calculator](pages/01_L01_Python_Intro.py)
-2. [Your Beam on a Number Line](pages/02_L02_Beam_Geometry.py)
-3. [Placing Loads on the Beam](pages/03_L03_Loads.py)
-4. [Finding Support Reactions](pages/04_L04_Reactions.py)
-5. [Shear Force Diagram](pages/05_L05_Shear_Force.py)
-6. [Bending Moment Diagram](pages/06_L06_Bending_Moment.py)
-7. [Complete Analysis Tool](pages/07_L07_Capstone.py)
-""")
+    st.markdown("Use the pages listed above to navigate between lessons.")
 
 # ── Hero section ───────────────────────────────────────────────────────────
 st.markdown(
@@ -203,7 +194,7 @@ lessons = [
 
 for num, title, py_topics, struct_topics, page in lessons:
     with st.container():
-        c1, c2, c3, c4 = st.columns([0.5, 3, 3, 1.5])
+        c1, c2, c3 = st.columns([0.5, 3, 3])
         with c1:
             st.markdown(
                 f"<div style='background:#1565C0; color:white; border-radius:50%; "
@@ -215,8 +206,6 @@ for num, title, py_topics, struct_topics, page in lessons:
             st.markdown(f"**{title}**  \n🐍 {py_topics}")
         with c3:
             st.markdown(f"🏗️ {struct_topics}")
-        with c4:
-            st.page_link(page, label="Open lesson →")
     st.markdown("---")
 
 # ── Footer ─────────────────────────────────────────────────────────────────
