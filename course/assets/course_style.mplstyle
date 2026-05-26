@@ -1,0 +1,24 @@
+## course_style.mplstyle — consistent matplotlib appearance for all lessons
+
+figure.facecolor    : white
+axes.facecolor      : #FAFAFA
+axes.edgecolor      : #CCCCCC
+axes.grid           : True
+grid.color          : #E0E0E0
+grid.linestyle      : --
+grid.linewidth      : 0.6
+
+font.family         : sans-serif
+font.size           : 10
+axes.titlesize      : 12
+axes.labelsize      : 10
+xtick.labelsize     : 9
+ytick.labelsize     : 9
+legend.fontsize     : 9
+
+lines.linewidth     : 2.0
+lines.solid_capstyle: round
+
+figure.dpi          : 100
+savefig.dpi         : 150
+savefig.bbox        : tight
