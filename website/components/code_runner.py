@@ -129,15 +129,6 @@ def practice_block(
     with st.expander("💡 Show solution"):
         st.markdown("**Complete solution:**")
         st.code(solution_code, language="python")
-        st.markdown("**What it produces:**")
-        sol_out, sol_figs, sol_err = run_code(solution_code, pre_defined)
-        if sol_err:
-            st.error(sol_err)
-        if sol_out:
-            st.code(sol_out, language=None)
-        for fig in sol_figs:
-            st.pyplot(fig, width='stretch')
-            plt.close(fig)
 
 
 # ---------------------------------------------------------------------------
@@ -148,16 +139,16 @@ def lesson_nav(prev_label=None, prev_page=None, next_label=None, next_page=None)
     """Render Previous / Next navigation at the bottom of a lesson page."""
     st.divider()
     cols = st.columns(3)
-    if prev_label and prev_page:
+    if prev_label:
         with cols[0]:
-            st.page_link(prev_page, label=f"← {prev_label}", icon="⬅️")
+            st.markdown(f"**← {prev_label}**  \n*(use the sidebar to navigate)*")
     with cols[1]:
         st.markdown(
             "<div style='text-align:center; color:#888; font-size:13px;'>"
             "Python for Structural Engineers</div>",
             unsafe_allow_html=True,
         )
-    if next_label and next_page:
+    if next_label:
         with cols[2]:
-            st.page_link(next_page, label=f"{next_label} →", icon="➡️")
+            st.markdown(f"**{next_label} →**  \n*(use the sidebar to navigate)*")
 
