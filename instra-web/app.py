@@ -9,8 +9,7 @@ from flask import Flask, render_template, request
 app = Flask(__name__)
 
 # ── Config ─────────────────────────────────────────────────────────────────
-# Switch to the Streamlit Cloud URL before deploying
-STREAMLIT_URL = "http://localhost:8501"
+STREAMLIT_URL = "https://structural-analysis-course-66mh8gejittd5yrbcyhdur.streamlit.app"
 
 # ── Full INSTRA Academy curriculum ──────────────────────────────────────────
 # Ordered by complexity: each course adds one new conceptual layer
