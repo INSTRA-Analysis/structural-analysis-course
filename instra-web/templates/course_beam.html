@@ -113,19 +113,27 @@
   </div>
 </section>
 
-<!-- ── Embedded Streamlit app ────────────────────────── -->
-<section class="course-app-section" id="course-app">
-  <div class="course-app-bar">
-    <span>📐 Simply Supported Beam — Interactive Course</span>
-    <a href="{{ streamlit_url }}" target="_blank" rel="noopener">Open in new tab ↗</a>
+<!-- ── Launch course ─────────────────────────────────── -->
+<section class="cta-banner" id="course-app" style="padding: 5rem 2rem;">
+  <div style="max-width: 620px; margin: 0 auto; text-align: center;">
+    <div style="font-size: 3rem; margin-bottom: 1rem;">📐</div>
+    <h2 style="color: #fff; margin-bottom: 1rem;">Ready to start coding?</h2>
+    <p style="color: rgba(255,255,255,0.75); margin-bottom: 2rem; font-size: 1.05rem;">
+      The interactive course opens in a new tab — a full Python environment
+      with live diagrams, a built-in code editor, and worked solutions.
+      No installation required.
+    </p>
+    <a href="{{ streamlit_url }}"
+       target="_blank"
+       rel="noopener"
+       class="btn btn-primary btn-lg"
+       style="font-size: 1.1rem; padding: 1rem 2.5rem;">
+      Launch Interactive Course ↗
+    </a>
+    <p style="margin-top: 1.5rem; font-size: 0.82rem; color: rgba(255,255,255,0.45);">
+      Opens in a new tab · Free · No account required
+    </p>
   </div>
-  <iframe
-    src="{{ streamlit_url }}"
-    class="course-iframe"
-    title="Simply Supported Beam Analysis — Interactive Course"
-    allow="fullscreen"
-    loading="lazy"
-  ></iframe>
 </section>
 
 {% endblock %}
