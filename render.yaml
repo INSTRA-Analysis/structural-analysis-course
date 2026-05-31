@@ -4,5 +4,5 @@ services:
     env: python
     rootDir: instra-web
     buildCommand: pip install -r requirements.txt
-    startCommand: python -m gunicorn app:app
+    startCommand: python -m gunicorn --chdir instra-web app:app
     plan: free
