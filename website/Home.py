@@ -1,12 +1,12 @@
 """
-Home.py — Landing page for the Python for Structural Engineers course.
+Home.py — Landing page for the INSTRA Academy course.
 Run with:  streamlit run Home.py
 """
 
 import streamlit as st
 
 st.set_page_config(
-    page_title="Python for Structural Engineers",
+    page_title="INSTRA Academy",
     page_icon="🏗️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -23,7 +23,7 @@ with st.sidebar:
 st.markdown(
     """
     <div style='text-align: center; padding: 2rem 0 1rem 0;'>
-        <h1 style='font-size: 2.8rem; color: #1565C0;'>🏗️ Python for Structural Engineers</h1>
+        <h1 style='font-size: 2.8rem; color: #1565C0;'>🏗️ INSTRA Academy</h1>
         <h3 style='color: #555; font-weight: 400;'>Simply Supported Beam Analysis — Beginner Course</h3>
     </div>
     """,
@@ -190,11 +190,15 @@ lessons = [
      "Putting it all together",
      "Balanced cantilever, optimisation, PDF export",
      "pages/07_L07_Capstone.py"),
+    ("S1", "Superposition (Supplementary)",
+     "Decomposing load effects, contribution tables",
+     "Why linearity lets us add results independently",
+     "pages/08_L08_Superposition.py"),
 ]
 
 for num, title, py_topics, struct_topics, page in lessons:
     with st.container():
-        c1, c2, c3 = st.columns([0.5, 3, 3])
+        c1, c2, c3, c4 = st.columns([0.5, 3, 3, 1])
         with c1:
             st.markdown(
                 f"<div style='background:#1565C0; color:white; border-radius:50%; "
@@ -206,12 +210,46 @@ for num, title, py_topics, struct_topics, page in lessons:
             st.markdown(f"**{title}**  \n🐍 {py_topics}")
         with c3:
             st.markdown(f"🏗️ {struct_topics}")
+        with c4:
+            if st.button("Open →", key=f"home_open_{num}", use_container_width=True):
+                st.switch_page(page)
     st.markdown("---")
+
+# ── Full curriculum roadmap ────────────────────────────────────────────────
+st.markdown("---")
+st.header("INSTRA Academy — Full Curriculum")
+st.markdown("This course is the first in a seven-course series. Each course adds one new concept layer.")
+
+roadmap = [
+    ("Beginner",     "🟢", [
+        ("1", "Simply Supported Beam",   "Equilibrium · SFD · BMD",          "— (no matrix)",              "✅ You are here"),
+        ("2", "2D Truss",                "Direct Stiffness Method · Assembly", "2 DOF/node  (u, v)",         "🔜 Coming soon"),
+    ]),
+    ("Intermediate", "🟡", [
+        ("3", "Continuous Beam",         "Beam element · Internal supports",   "2 DOF/node  (w, θ)",         "🔜 Coming soon"),
+        ("4", "2D Portal Frame",         "Axial + bending · Sway",            "3 DOF/node  (u, v, θ)",      "🔜 Coming soon"),
+    ]),
+    ("Advanced",     "🔴", [
+        ("5", "3D Space Frame + Truss",  "3D transformation · Hybrid model",  "6 DOF/node",                 "🔜 Coming soon"),
+        ("6", "3D Moment Frame",         "Lateral loads · Drift checks",      "6 DOF/node",                 "🔜 Coming soon"),
+        ("7", "Structural Dynamics",     "Modal analysis · Seismic spectra",  "6 DOF/node + time",          "🔜 Coming soon"),
+    ]),
+]
+
+for level, dot, items in roadmap:
+    st.markdown(f"#### {dot} {level}")
+    for num, title, topics, dof, status in items:
+        cols = st.columns([0.3, 2.2, 2.2, 1.5, 1.2])
+        cols[0].markdown(f"**{num}**")
+        cols[1].markdown(f"**{title}**")
+        cols[2].markdown(f"*{topics}*")
+        cols[3].markdown(f"`{dof}`")
+        cols[4].markdown(status)
 
 # ── Footer ─────────────────────────────────────────────────────────────────
 st.markdown(
     "<div style='text-align:center; color:#888; font-size:12px; padding:1rem;'>"
-    "Python for Structural Engineers · Simply Supported Beam Course"
+    "INSTRA Academy · Simply Supported Beam Course"
     "</div>",
     unsafe_allow_html=True,
 )

@@ -13,12 +13,14 @@ sys.path.insert(0, os.path.join(BASE, "..", "course", "shared"))
 
 from code_runner import practice_block, lesson_nav
 from plot_helpers import draw_beam
+from styles import apply_styles, lesson_progress, in_practice, key_takeaways
 
 st.set_page_config(page_title="L02 — Beam Geometry", page_icon="📐", layout="wide")
+apply_styles()
 
 # ── Header ─────────────────────────────────────────────────────────────────
 st.title("Lesson 2 — Your Beam on a Number Line")
-st.caption("Prerequisites: Lesson 1  ·  Time: ~45 minutes")
+lesson_progress(2, 7, "Prerequisites: L01  ·  ~45 minutes")
 st.markdown("""
 The beam we analyse in this course has a **parametric** geometry — three numbers
 fully describe it. Move the sliders below and watch the diagram update.
@@ -42,13 +44,23 @@ Three variables describe the entire beam:
 When `x_A = 0` there is no left cantilever. When `x_B = L_total` there is no right cantilever.
 """)
 
+# ── Persistent beam configuration — shared with Lessons 3 to 7 ───────────────
+if "geometry" not in st.session_state:
+    st.session_state.geometry = {"L_total": 10.0, "x_A": 2.0, "x_B": 8.0}
+if "loads" not in st.session_state:
+    st.session_state.loads = []
+
 col_ctrl, col_plot = st.columns([1, 2])
 
 with col_ctrl:
-    L   = st.slider("Total length L (m)", 5.0, 20.0, 10.0, 0.5)
-    x_A = st.slider("Pin A position (m)", 0.0, L * 0.5, 2.0, 0.5)
+    _g  = st.session_state.geometry
+    L   = st.slider("Total length L (m)", 5.0, 20.0, _g["L_total"], 0.5)
+    x_A = st.slider("Pin A position (m)", 0.0, L * 0.5, min(_g["x_A"], L * 0.5), 0.5)
     x_B_min = x_A + 0.5
-    x_B = st.slider("Roller B position (m)", x_B_min, L, min(8.0, L), 0.5)
+    x_B = st.slider("Roller B position (m)", x_B_min, L, max(min(_g["x_B"], L), x_B_min), 0.5)
+
+    # Persist on every rerun — all downstream lessons read this
+    st.session_state.geometry = {"L_total": L, "x_A": x_A, "x_B": x_B}
 
     cant_L = x_A
     cant_R = L - x_B
@@ -63,6 +75,7 @@ with col_ctrl:
 | Right cantilever | **{cant_R:.1f} m** |
 | **Total** | **{L:.1f} m** |
 """)
+    st.success(f"Beam saved — Lessons 3–7 will use  L = {L:.1f} m · A = {x_A:.1f} m · B = {x_B:.1f} m")
     if cant_L == 0:
         st.info("No left cantilever — A is at the free end")
     if cant_R == 0:
@@ -189,6 +202,19 @@ print(f"Midspan position  : {midspan:.1f} m")
 total_check = cantilever_left + interior_span + cantilever_right
 print(f"Check (should = {L_total}): {total_check:.1f}")
 """
+
+in_practice(
+    "Every structural analysis program — OpenSeesPy, SAP2000, Tekla — stores geometry "
+    "parametrically as node coordinates. The three-number beam dict you defined here is "
+    "the same concept: describe the structure once, reuse everywhere."
+)
+
+key_takeaways([
+    "Three numbers — `L_total`, `x_A`, `x_B` — fully describe any simply supported beam with cantilevers",
+    "`x_A = 0` removes the left cantilever; `x_B = L_total` removes the right cantilever",
+    "`np.linspace(0, L, 500)` generates the 500-point x-axis used in every diagram from L05 onwards",
+    "This geometry dict is now saved in session state — all later lessons read it automatically",
+])
 
 practice_block(
     key="L02",

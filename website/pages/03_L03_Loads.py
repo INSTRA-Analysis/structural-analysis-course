@@ -13,11 +13,36 @@ sys.path.insert(0, os.path.join(BASE, "..", "course", "shared"))
 
 from code_runner import practice_block, lesson_nav
 from plot_helpers import draw_beam, draw_loads
+from styles import apply_styles, lesson_progress, in_practice, key_takeaways
 
 st.set_page_config(page_title="L03 — Loads", page_icon="📦", layout="wide")
+apply_styles()
+
+
+def _loads_as_code(loads):
+    """Format the loads list as valid Python code for the live display panel."""
+    if not loads:
+        return "loads = []"
+    lines = ["loads = ["]
+    for ld in loads:
+        if ld["type"] == "point":
+            lines.append(
+                f'    {{"type": "point", '
+                f'"x": {ld["x"]:.1f}, '
+                f'"magnitude": {ld["magnitude"]:.1f}}},'
+            )
+        elif ld["type"] == "udl":
+            lines.append(
+                f'    {{"type": "udl", '
+                f'"x1": {ld["x1"]:.1f}, '
+                f'"x2": {ld["x2"]:.1f}, '
+                f'"w": {ld["w"]:.1f}}},'
+            )
+    lines.append("]")
+    return "\n".join(lines)
 
 st.title("Lesson 3 — Placing Loads on the Beam")
-st.caption("Prerequisites: Lessons 1–2  ·  Time: ~60 minutes")
+lesson_progress(3, 7, "Prerequisites: L01–L02  ·  ~60 minutes")
 st.markdown("""
 Before calculating reactions, we need to describe the applied loads in Python.
 We use **dictionaries** — a way to group related data under one name.
@@ -41,7 +66,14 @@ So a **20 kN downward point load** is written as `magnitude = -20.0`.
 
 st.markdown("## 📐 Theory — Load Types and the Interactive Diagram")
 
-geometry = {"L_total": 10.0, "x_A": 2.0, "x_B": 8.0}
+# ── Read beam geometry set in Lesson 2 ───────────────────────────────────────
+if "geometry" not in st.session_state:
+    st.session_state.geometry = {"L_total": 10.0, "x_A": 2.0, "x_B": 8.0}
+if "loads" not in st.session_state:
+    st.session_state.loads = []
+
+geometry = st.session_state.geometry
+_L = geometry["L_total"]
 
 col_ctrl, col_plot = st.columns([1, 2])
 
@@ -50,14 +82,14 @@ with col_ctrl:
     load_type = st.radio("Load type", ["Point load", "UDL"], horizontal=True)
 
     if load_type == "Point load":
-        x_pos  = st.slider("Position x (m)", 0.0, 10.0, 5.0, 0.5)
+        x_pos  = st.slider("Position x (m)", 0.0, _L, min(round(_L / 2, 1), _L), 0.5)
         mag    = st.slider("Magnitude (kN)  negative = down", -100.0, 100.0, -20.0, 5.0)
         new_load = {"type": "point", "x": x_pos, "magnitude": mag}
     else:
-        x1 = st.slider("UDL start x1 (m)", 0.0, 9.5, 2.0, 0.5)
-        x2 = st.slider("UDL end   x2 (m)", 0.5, 10.0, 8.0, 0.5)
+        x1 = st.slider("UDL start x1 (m)", 0.0, _L - 0.5, min(geometry["x_A"], _L - 0.5), 0.5)
+        x2 = st.slider("UDL end   x2 (m)", x1 + 0.5, _L, min(geometry["x_B"], _L), 0.5)
         w  = st.slider("Intensity (kN/m)  negative = down", -40.0, 40.0, -5.0, 1.0)
-        new_load = {"type": "udl", "x1": x1, "x2": min(x2, 10.0), "w": w}
+        new_load = {"type": "udl", "x1": x1, "x2": min(x2, _L), "w": w}
 
     if "loads" not in st.session_state:
         st.session_state.loads = []
@@ -70,16 +102,8 @@ with col_ctrl:
         if st.button("Clear all"):
             st.session_state.loads = []
 
-    if st.session_state.loads:
-        st.markdown(f"**{len(st.session_state.loads)} load(s) applied:**")
-        for i, ld in enumerate(st.session_state.loads):
-            if ld["type"] == "point":
-                st.markdown(f"- Load {i+1}: {ld['magnitude']:+.0f} kN at x={ld['x']:.1f} m")
-            else:
-                st.markdown(f"- Load {i+1}: {ld['w']:+.0f} kN/m  [{ld['x1']:.1f}–{ld['x2']:.1f} m]")
-
 with col_plot:
-    fig, ax = plt.subplots(figsize=(9, 4))
+    fig, ax = plt.subplots(figsize=(9, 2.8))
     draw_beam(ax, geometry)
     if st.session_state.loads:
         draw_loads(ax, st.session_state.loads, 10.0)
@@ -89,6 +113,10 @@ with col_plot:
         ax.set_title("Add loads using the controls →", fontsize=10, color="#888")
     st.pyplot(fig, width='stretch')
     plt.close(fig)
+
+# ── Live Python representation — full width ────────────────────────────────
+st.markdown("**Your `loads` list in Python:**")
+st.code(_loads_as_code(st.session_state.loads), language="python")
 
 st.markdown("---")
 
@@ -240,6 +268,19 @@ total = sum(
 )
 print(f"\\nTotal vertical load: {total:.0f} kN")
 """
+
+in_practice(
+    "In real practice, load cases are defined as data structures — dead load, imposed load, "
+    "wind load — and combined programmatically. The same list-of-dicts pattern is used in "
+    "OpenSeesPy, PyNite, and every parametric FEA workflow."
+)
+
+key_takeaways([
+    "A dictionary groups related data under named keys — `load['magnitude']` is always clear",
+    "Downward forces are **negative**; upward reactions will be **positive** — this must be consistent throughout",
+    "A list of load dicts lets you loop over all loads with a single `for` statement",
+    "The equivalent point load for a UDL is `P = w × (x2 − x1)` acting at the centroid",
+])
 
 practice_block(
     key="L03",

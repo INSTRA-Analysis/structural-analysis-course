@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Courses — INSTRA Academy{% endblock %}
+{% block meta_description %}Interactive structural analysis courses. Learn Python for structural engineering through hands-on lessons with live diagrams.{% endblock %}
+
+{% block content %}
+
+<!-- ── Page header ──────────────────────────────────── -->
+<section class="page-hero">
+  <div class="container">
+    <p class="section-label">All Courses</p>
+    <h1>Structural Analysis Courses</h1>
+    <p>From beginner to advanced — each course builds one complete analysis tool.</p>
+  </div>
+</section>
+
+<!-- ── Progression note ──────────────────────────────── -->
+<section class="section-sm" style="background:var(--bg-card); border-bottom:1px solid var(--border);">
+  <div class="container">
+    <p style="max-width:760px; margin:0 auto; text-align:center; color:var(--text-muted); font-size:0.95rem;">
+      Each course adds exactly one new concept layer — DOFs, dimensions, or physics — so you
+      never have to take a leap of faith. Start at Beginner and progress at your own pace.
+    </p>
+  </div>
+</section>
+
+<!-- ── Course grid ───────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+
+    {% set levels = [
+      ("Beginner",     "Available & In Development", "badge-green"),
+      ("Intermediate", "In Development",              "badge-navy"),
+      ("Advanced",     "In Development",              "badge-muted"),
+    ] %}
+
+    {% for level, subtitle, badge_class in levels %}
+
+    <div class="section-header" {% if not loop.first %}style="margin-top:4rem;"{% endif %}>
+      <p class="section-label">{{ level }}</p>
+      <h2>{{ level }} Courses</h2>
+      <p style="margin-top:0.35rem;">{{ subtitle }}</p>
+    </div>
+
+    <div class="grid-3">
+      {% for course in courses if course.level == level %}
+      <div class="card {{ 'coming-soon' if course.status == 'coming_soon' else '' }}"
+           style="{{ 'opacity:0.78;' if course.status == 'coming_soon' else '' }}">
+
+        <div class="card-header {{ 'muted' if course.status == 'coming_soon' else '' }}">
+          {% if course.status == 'coming_soon' %}
+            <span class="coming-soon-label">Coming Soon</span>
+          {% endif %}
+          <div class="card-level" style="font-size:0.7rem; opacity:0.7; margin-bottom:0.25rem;">
+            {{ course.dof }}
+          </div>
+          <h3>{{ course.title }}</h3>
+        </div>
+
+        <div class="card-body">
+          <p>{{ course.description }}</p>
+          <div class="card-tags" style="margin-top:0.75rem;">
+            {% for tag in course.tags %}
+              <span class="badge {{ 'badge-gold' if tag == 'Free' else ('badge-navy' if course.status == 'available' else 'badge-muted') }}">{{ tag }}</span>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="card-footer">
+          {% if course.status == 'available' %}
+            <span class="card-meta">{{ course.lessons }} lessons · {{ course.duration }}</span>
+            <a href="{{ url_for('course_beam') }}" class="btn btn-navy">Open →</a>
+          {% else %}
+            <span class="card-meta">In development</span>
+            <span class="badge badge-muted">Notify me</span>
+          {% endif %}
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if not loop.last %}
+    <div class="divider" style="margin-top:3.5rem;"></div>
+    {% endif %}
+
+    {% endfor %}
+
+  </div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────── -->
+<section class="cta-banner">
+  <h2>Ready to start?</h2>
+  <p>The Simply Supported Beam course is free, interactive, and takes you from zero to a full analysis tool.</p>
+  <a href="{{ url_for('course_beam') }}" class="btn btn-primary btn-lg">Start the First Lesson →</a>
+</section>
+
+{% endblock %}

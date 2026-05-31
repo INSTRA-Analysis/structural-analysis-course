@@ -101,18 +101,21 @@ def draw_loads(ax, loads, L_total, arrow_height=0.9):
 
 
 def _draw_point_load(ax, x, magnitude, arrow_height):
-    color = "#1565C0" if magnitude < 0 else "#B71C1C"
-    label_y = arrow_height + 0.12 if magnitude > 0 else -arrow_height - 0.18
-    tip_y   = 0.02 if magnitude < 0 else -0.02
-    tail_y  = arrow_height if magnitude < 0 else -arrow_height
+    color  = "#1565C0" if magnitude < 0 else "#B71C1C"
+    tip_y  = 0.02  if magnitude < 0 else -0.02
+    tail_y = arrow_height if magnitude < 0 else -arrow_height
+    # va="bottom": text sits above the tail (downward loads, tail is at top)
+    # va="top":    text sits below the tail (upward loads, tail is at bottom)
+    va = "bottom" if magnitude < 0 else "top"
 
+    # Single annotate call: text at xytext (tail), arrowhead at xy (beam surface)
     ax.annotate(
-        "", xy=(x, tip_y), xytext=(x, tail_y),
-        arrowprops=dict(arrowstyle="-|>", color=color, lw=1.8,
-                        mutation_scale=14)
+        f"{abs(magnitude):.0f} kN",
+        xy=(x, tip_y), xytext=(x, tail_y),
+        ha="center", va=va,
+        fontsize=8, color=color, fontweight="bold",
+        arrowprops=dict(arrowstyle="-|>", color=color, lw=1.8, mutation_scale=14),
     )
-    ax.text(x, label_y, f"{abs(magnitude):.0f} kN",
-            ha="center", va="bottom", fontsize=8, color=color, fontweight="bold")
 
 
 def _draw_udl(ax, x1, x2, w, arrow_height):
@@ -210,3 +213,106 @@ def _annotate_peak(ax, x, y, label):
         fontsize=8, color="red",
         arrowprops=dict(arrowstyle="->", color="red", lw=0.8)
     )
+
+
+# ---------------------------------------------------------------------------
+# Superposition / contribution plots  (requires analyse_contributions output)
+# ---------------------------------------------------------------------------
+
+# Colours cycled across individual load contributions
+_CONTRIBUTION_COLOURS = [
+    "#1565C0", "#E65100", "#6A1B9A", "#00695C", "#AD1457", "#4E342E", "#37474F",
+]
+
+
+def draw_contributions(result, figsize=(14, 9)):
+    """
+    Plot per-load SFD and BMD contributions alongside their superposed totals.
+
+    This mirrors the two-stage visualisation from John's training notebook:
+      Left column  — one line per load (pre-superposition)
+      Right column — cumulative (superposed) diagram with coloured fill
+
+    Parameters
+    ----------
+    result  : dict returned by beam_solver.analyse_contributions()
+    figsize : tuple
+
+    Returns
+    -------
+    fig : matplotlib Figure
+    """
+    x             = result["x"]
+    V_total       = result["V"]
+    M_total       = result["M"]
+    contributions = result["contributions"]
+    L             = x[-1]
+
+    fig, axes = plt.subplots(2, 2, figsize=figsize,
+                             gridspec_kw={"hspace": 0.45, "wspace": 0.35})
+    (ax_v_each, ax_v_total), (ax_m_each, ax_m_total) = axes
+
+    # ── Left column: per-load contributions ───────────────────────────────
+    for i, c in enumerate(contributions):
+        colour = _CONTRIBUTION_COLOURS[i % len(_CONTRIBUTION_COLOURS)]
+        ax_v_each.plot(x, c["V"], color=colour, linewidth=1.6,
+                       label=c["label"])
+        ax_m_each.plot(x, c["M"], color=colour, linewidth=1.6,
+                       label=c["label"])
+
+    for ax, ylabel, title in [
+        (ax_v_each, "Shear V (kN)",     "SFD — individual load contributions"),
+        (ax_m_each, "Moment M (kN·m)", "BMD — individual load contributions"),
+    ]:
+        ax.axhline(0, color="black", linewidth=0.8)
+        # Draw beam as a thick grey line at y=0 bottom
+        ax.plot([0, L], [0, 0], color="#aaa", linewidth=6, alpha=0.35, zorder=0)
+        ax.set_ylabel(ylabel, fontsize=9)
+        ax.set_xlabel("Position x (m)", fontsize=9)
+        ax.set_title(title, fontsize=9, fontweight="bold", pad=6)
+        ax.legend(fontsize=7, loc="upper right")
+        ax.grid(True, linestyle="--", alpha=0.35)
+        ax.set_xlim(x[0], x[-1])
+
+    # ── Right column: superposed totals ──────────────────────────────────
+    # SFD total
+    ax_v_total.plot(x, V_total, color="#1565C0", linewidth=2)
+    ax_v_total.fill_between(x, V_total, 0, where=(V_total >= 0),
+                            color="#90CAF9", alpha=0.55, label="Positive")
+    ax_v_total.fill_between(x, V_total, 0, where=(V_total < 0),
+                            color="#EF9A9A", alpha=0.55, label="Negative")
+    ax_v_total.axhline(0, color="black", linewidth=0.8)
+    ax_v_total.plot([0, L], [0, 0], color="#aaa", linewidth=6, alpha=0.35, zorder=0)
+    ax_v_total.set_ylabel("Shear V (kN)", fontsize=9)
+    ax_v_total.set_xlabel("Position x (m)", fontsize=9)
+    ax_v_total.set_title("SFD — superposition (total)", fontsize=9,
+                         fontweight="bold", pad=6)
+    ax_v_total.legend(fontsize=8)
+    ax_v_total.grid(True, linestyle="--", alpha=0.35)
+    ax_v_total.set_xlim(x[0], x[-1])
+
+    # BMD total
+    ax_m_total.plot(x, M_total, color="#1B5E20", linewidth=2)
+    ax_m_total.fill_between(x, M_total, 0, where=(M_total >= 0),
+                            color="#A5D6A7", alpha=0.55, label="Sagging (+)")
+    ax_m_total.fill_between(x, M_total, 0, where=(M_total < 0),
+                            color="#FFCDD2", alpha=0.55, label="Hogging (−)")
+    ax_m_total.axhline(0, color="black", linewidth=0.8)
+    ax_m_total.plot([0, L], [0, 0], color="#aaa", linewidth=6, alpha=0.35, zorder=0)
+    ax_m_total.set_ylabel("Moment M (kN·m)", fontsize=9)
+    ax_m_total.set_xlabel("Position x (m)", fontsize=9)
+    ax_m_total.set_title("BMD — superposition (total)", fontsize=9,
+                         fontweight="bold", pad=6)
+    ax_m_total.legend(fontsize=8)
+    ax_m_total.grid(True, linestyle="--", alpha=0.35)
+    ax_m_total.set_xlim(x[0], x[-1])
+
+    # ── Reactions summary in suptitle ─────────────────────────────────────
+    R_A = result["R_A"]
+    R_B = result["R_B"]
+    fig.suptitle(
+        f"Superposition analysis   |   R_A = {R_A:+.1f} kN   |   R_B = {R_B:+.1f} kN",
+        fontsize=10, fontweight="bold", y=0.98,
+    )
+
+    return fig

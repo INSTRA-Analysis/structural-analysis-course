@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}About — INSTRA Academy{% endblock %}
+{% block meta_description %}INSTRA Academy delivers interactive structural analysis courses developed by practising engineers and university professors — grounded in real problems, driven by code.{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ────────────────────────────────────────────── -->
+<section class="about-hero">
+  <div class="container">
+    <p class="section-label" style="color:var(--gold);">About</p>
+    <h1>Engineers to Engineers</h1>
+    <p>
+      INSTRA Academy is a collaboration between practising structural engineers
+      and university professors — bringing real project experience and academic
+      rigour into one interactive platform.
+    </p>
+  </div>
+</section>
+
+<!-- ── Mission ──────────────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="grid-2" style="align-items:start; gap: 4rem;">
+
+      <div>
+        <p class="section-label">Mission</p>
+        <h2 style="margin-bottom: 1rem;">Why INSTRA Academy Exists</h2>
+        <p style="margin-bottom: 1rem;">
+          Most structural engineering software is a black box. You put numbers in,
+          diagrams come out, and the <em>why</em> stays hidden.
+        </p>
+        <p style="margin-bottom: 1rem;">
+          INSTRA Academy courses teach you to build the tool yourself — line by line, with
+          full understanding of every equation underneath. When you write
+          <code>R_A + R_B = total_load</code> and watch the reactions update live
+          as you move a slider, equilibrium stops being abstract.
+        </p>
+        <p>
+          The goal is not to replace professional software. It is to make you
+          the kind of engineer who understands what that software is actually doing.
+        </p>
+      </div>
+
+      <div>
+        <p class="section-label">The Approach</p>
+        <h2 style="margin-bottom: 1rem;">Theory Through Interaction</h2>
+        <p style="margin-bottom: 1rem;">
+          Every lesson follows the same pattern: start with a live diagram
+          you can manipulate, then write the Python that produces it.
+          The slider comes first — the code is the explanation.
+        </p>
+        <p>
+          Courses build incrementally. Each lesson adds one concept to a
+          growing analysis tool, so by the end you have written something
+          genuinely useful — not a series of disconnected exercises.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── Values ──────────────────────────────────────────── -->
+<section class="section" style="background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-header text-center">
+      <p class="section-label">Principles</p>
+      <h2>What We Stand For</h2>
+    </div>
+
+    <div class="values-grid">
+      <div class="value-card">
+        <div class="icon">📐</div>
+        <h4>Physical Correctness First</h4>
+        <p>Sign conventions are explicit. Assumptions are stated. If something can go wrong numerically, we say so.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">🔍</div>
+        <h4>No Black Boxes</h4>
+        <p>Every function is derived before it is used. You understand the equation before you type it.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">⚡</div>
+        <h4>Immediate Feedback</h4>
+        <p>Sliders update diagrams in real time. Your code runs in the browser. Results appear before doubt sets in.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">🏗️</div>
+        <h4>Real Problems</h4>
+        <p>The beam we analyse has cantilevers, eccentric loads, and non-trivial reactions — because real beams do too.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Who is behind ─────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="section-header text-center">
+      <p class="section-label">The Team</p>
+      <h2>Who Is Behind INSTRA Academy</h2>
+      <p style="max-width:600px; margin:0.5rem auto 0;">
+        Delivered by engineers to engineers — with one clear principle:
+        if you can build it, you understand it.
+      </p>
+    </div>
+
+    <div class="grid-2" style="gap:2rem; margin-top:2rem;">
+
+      <div class="about-card">
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+          <div style="width:48px; height:48px; background:var(--navy); border-radius:50%;
+                      display:flex; align-items:center; justify-content:center;
+                      font-size:1.4rem; flex-shrink:0;">🏗️</div>
+          <div>
+            <h4 style="margin:0;">Structural Engineering Practice</h4>
+            <p style="margin:0; font-size:0.82rem;">Applied · Computational · Consulting</p>
+          </div>
+        </div>
+        <p style="margin-bottom:0.75rem;">
+          The courses are grounded in real engineering problems encountered in
+          consulting practice — not contrived textbook scenarios. Every beam
+          configuration, load case, and sign convention reflects what practising
+          engineers actually deal with.
+        </p>
+        <p style="margin:0;">
+          Applied experience spans structural dynamics, seismic analysis,
+          and numerical methods for frame and continuum structures.
+        </p>
+      </div>
+
+      <div class="about-card">
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+          <div style="width:48px; height:48px; background:var(--gold); border-radius:50%;
+                      display:flex; align-items:center; justify-content:center;
+                      font-size:1.4rem; flex-shrink:0;">🎓</div>
+          <div>
+            <h4 style="margin:0;">University Research &amp; Teaching</h4>
+            <p style="margin:0; font-size:0.82rem;">Lecturers · Researchers · Curriculum Design</p>
+          </div>
+        </div>
+        <p style="margin-bottom:0.75rem;">
+          INSTRA Academy involves university professors and lecturers who have
+          taught structural analysis and numerical methods at degree level.
+          The pedagogy — theory first, then code, then application — is drawn
+          directly from what works in the lecture theatre.
+        </p>
+        <p style="margin:0;">
+          The courses grew from material developed for engineering students
+          learning Python for the first time, applied to structures they
+          already understood analytically.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="about-card" style="margin-top:2rem; text-align:center; background:var(--bg); border:1px solid var(--border);">
+      <p style="margin:0; font-size:1.05rem; color:var(--text);">
+        <strong>Engineers to Engineers.</strong>
+        Every lesson is written by someone who has used the same equations
+        on a real project — and who knows exactly where the confusion sets in.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────── -->
+<section class="cta-banner">
+  <h2>Ready to start?</h2>
+  <p>The first course is free. No account required.</p>
+  <a href="{{ url_for('course_beam') }}" class="btn btn-primary btn-lg">Open the Beam Course →</a>
+</section>
+
+{% endblock %}

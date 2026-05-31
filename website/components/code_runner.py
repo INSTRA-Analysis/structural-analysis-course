@@ -139,16 +139,19 @@ def lesson_nav(prev_label=None, prev_page=None, next_label=None, next_page=None)
     """Render Previous / Next navigation at the bottom of a lesson page."""
     st.divider()
     cols = st.columns(3)
-    if prev_label:
+    if prev_label and prev_page:
         with cols[0]:
-            st.markdown(f"**← {prev_label}**  \n*(use the sidebar to navigate)*")
+            if st.button(f"← {prev_label}", use_container_width=True, key=f"nav_prev_{prev_page}"):
+                st.switch_page(prev_page)
     with cols[1]:
         st.markdown(
             "<div style='text-align:center; color:#888; font-size:13px;'>"
-            "Python for Structural Engineers</div>",
+            "INSTRA Academy</div>",
             unsafe_allow_html=True,
         )
-    if next_label:
+    if next_label and next_page:
         with cols[2]:
-            st.markdown(f"**{next_label} →**  \n*(use the sidebar to navigate)*")
+            if st.button(f"{next_label} →", use_container_width=True, type="primary",
+                         key=f"nav_next_{next_page}"):
+                st.switch_page(next_page)
 

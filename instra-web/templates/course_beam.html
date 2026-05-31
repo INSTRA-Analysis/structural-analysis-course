@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Simply Supported Beam Analysis — INSTRA Academy{% endblock %}
+{% block meta_description %}7-lesson interactive Python course for structural engineers. Build a complete beam analysis tool from scratch.{% endblock %}
+
+{% block content %}
+
+<!-- ── Course hero ───────────────────────────────────── -->
+<section class="course-hero">
+  <div class="container">
+
+    <nav class="breadcrumb">
+      <a href="{{ url_for('index') }}">Home</a>
+      <span>›</span>
+      <a href="{{ url_for('courses') }}">Courses</a>
+      <span>›</span>
+      <span style="color:rgba(255,255,255,0.75);">Simply Supported Beam</span>
+    </nav>
+
+    <span class="badge badge-gold" style="margin-bottom:1rem; display:inline-block;">Free Course</span>
+    <h1>Simply Supported Beam Analysis</h1>
+    <p style="color:rgba(255,255,255,0.72); max-width:620px; font-size:1.05rem; margin-top:0.75rem;">
+      Build a complete beam analysis tool in Python — from reading geometry to plotting
+      shear and moment diagrams. Live interactive widgets throughout.
+    </p>
+
+    <div class="course-hero-meta">
+      <span class="meta-item"><span class="icon">📚</span> 7 lessons</span>
+      <span class="meta-item"><span class="icon">⏱</span> ~4 hours</span>
+      <span class="meta-item"><span class="icon">📊</span> Beginner</span>
+      <span class="meta-item"><span class="icon">🐍</span> Python · NumPy · Matplotlib</span>
+    </div>
+
+    <div style="margin-top:2rem; display:flex; gap:1rem; flex-wrap:wrap;">
+      <a href="#course-app" class="btn btn-primary btn-lg">Launch Interactive Course ↓</a>
+      <a href="#lessons" class="btn btn-outline">View Lesson Plan</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── What you'll learn ─────────────────────────────── -->
+<section class="section" style="background: var(--bg-card); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Learning Outcomes</p>
+      <h2>What You Will Build</h2>
+      <p style="margin-top:0.5rem;">By the end of this course you will have written a parametric beam analysis tool — from scratch, in Python.</p>
+    </div>
+
+    <div class="learn-grid">
+      {% for topic in course.topics %}
+      <div class="learn-item">
+        <span class="learn-check">✦</span>
+        <span>{{ topic }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── Lesson breakdown ──────────────────────────────── -->
+<section class="section" id="lessons">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Lesson Plan</p>
+      <h2>7 Lessons, One Complete Tool</h2>
+    </div>
+
+    <div class="lesson-list">
+      {% set lesson_data = [
+        ("01", "Python as Your Calculator",
+         "Variables, arithmetic, f-strings, if/else",
+         "Cross-section properties: A, I, Z"),
+        ("02", "Your Beam on a Number Line",
+         "NumPy arrays, matplotlib, loops",
+         "Beam geometry, pin vs roller, cantilevers"),
+        ("03", "Placing Loads on the Beam",
+         "Dicts, functions, conditionals",
+         "Sign convention, point loads, UDL"),
+        ("04", "Finding Support Reactions",
+         "Functions, multiple return values, assertions",
+         "Equilibrium: ΣFy = 0, ΣM = 0"),
+        ("05", "Shear Force Diagram",
+         "Array loops, module imports",
+         "SFD — shear as sum of forces left of section"),
+        ("06", "Bending Moment Diagram",
+         "Numerical integration, coloured fills",
+         "BMD — moment as integral of shear"),
+        ("07", "The Complete Analysis Tool",
+         "Classes, JSON, gridspec, savefig",
+         "Full workflow, balanced cantilever, PDF export"),
+      ] %}
+
+      {% for num, title, py_topics, struct_topics in lesson_data %}
+      <div class="lesson-item">
+        <div class="lesson-num">{{ num }}</div>
+        <div>
+          <div class="lesson-title">{{ title }}</div>
+          <div class="lesson-sub">🐍 {{ py_topics }} &nbsp;·&nbsp; 🏗️ {{ struct_topics }}</div>
+        </div>
+        {% if loop.index == 1 %}
+          <span class="badge badge-gold">Start here</span>
+        {% elif loop.index == 7 %}
+          <span class="badge badge-navy">Capstone</span>
+        {% else %}
+          <span class="badge badge-muted">Lesson {{ num }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Embedded Streamlit app ────────────────────────── -->
+<section class="course-app-section" id="course-app">
+  <div class="course-app-bar">
+    <span>📐 Simply Supported Beam — Interactive Course</span>
+    <a href="{{ streamlit_url }}" target="_blank" rel="noopener">Open in new tab ↗</a>
+  </div>
+  <iframe
+    src="{{ streamlit_url }}"
+    class="course-iframe"
+    title="Simply Supported Beam Analysis — Interactive Course"
+    allow="fullscreen"
+    loading="lazy"
+  ></iframe>
+</section>
+
+{% endblock %}

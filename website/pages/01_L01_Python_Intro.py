@@ -4,12 +4,14 @@ import streamlit as st
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "components"))
 from code_runner import practice_block, lesson_nav
+from styles import apply_styles, lesson_progress, in_practice, key_takeaways
 
 st.set_page_config(page_title="L01 — Python as Your Calculator", page_icon="🐍", layout="wide")
+apply_styles()
 
 # ── Header ─────────────────────────────────────────────────────────────────
 st.title("Lesson 1 — Python as Your Calculator")
-st.caption("Prerequisites: none  ·  Time: ~45 minutes")
+lesson_progress(1, 7, "Prerequisites: none  ·  ~45 minutes")
 st.markdown("""
 As a structural engineer you already calculate things every day — section properties,
 reactions, moments. Python lets you do the same calculations, but store, reuse, and
@@ -184,6 +186,19 @@ if d >= b:
 else:
     print("Depth check: Consider rotating section")
 """
+
+in_practice(
+    "Engineering offices use Python to automate cross-section property tables, "
+    "load combination checks, and section classification routines — the same "
+    "arithmetic you have been doing by hand, packaged into scripts that run in seconds."
+)
+
+key_takeaways([
+    "A variable is a named container — use it anywhere in the rest of the calculation",
+    "Python arithmetic follows standard operator precedence; use parentheses when in doubt",
+    "f-strings (`f\"...{variable}...\"`) are the cleanest way to print engineering results",
+    "`if / else` lets the code make engineering decisions — pass/fail, class A/B, etc.",
+])
 
 practice_block(
     key="L01",

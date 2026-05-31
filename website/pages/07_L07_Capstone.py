@@ -13,12 +13,17 @@ sys.path.insert(0, os.path.join(BASE, "..", "course", "shared"))
 
 from code_runner import lesson_nav
 from plot_helpers import draw_beam, draw_loads, draw_reactions
+from styles import apply_styles, lesson_progress, in_practice, key_takeaways
 import beam_solver
+import sys, os as _os
+sys.path.insert(0, _os.path.join(_os.path.dirname(__file__), "..", "..", "course", "shared"))
+from notebook_generator import generate_notebook
 
 st.set_page_config(page_title="L07 — Complete Analysis Tool", page_icon="🏆", layout="wide")
+apply_styles()
 
 st.title("Lesson 7 — The Complete Analysis Tool")
-st.caption("Prerequisites: Lessons 1–6  ·  Time: ~90 minutes")
+lesson_progress(7, 7, "Prerequisites: L01–L06  ·  ~90 minutes")
 st.markdown("""
 You've built every piece of the analysis. Now they all work together in one professional tool.
 Use the tabs below — geometry, loads, results, and the balanced cantilever optimiser.
@@ -27,24 +32,31 @@ Use the tabs below — geometry, loads, results, and the balanced cantilever opt
 # ══════════════════════════════════════════════════════════════════════════════
 # Session state initialisation
 # ══════════════════════════════════════════════════════════════════════════════
+if "geometry" not in st.session_state:
+    st.session_state.geometry = {"L_total": 10.0, "x_A": 2.0, "x_B": 8.0}
+if "loads" not in st.session_state:
+    st.session_state.loads = []
+
+# Seed capstone from shared session state on first visit to L07
 if "cap_loads" not in st.session_state:
-    st.session_state.cap_loads = []
+    st.session_state.cap_loads = list(st.session_state.loads)
 if "cap_last_res" not in st.session_state:
     st.session_state.cap_last_res = None
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Tabs
 # ══════════════════════════════════════════════════════════════════════════════
-tab1, tab2, tab3, tab4 = st.tabs(["📐 1. Geometry", "📦 2. Loads", "📊 3. Results", "⚖️ 4. Optimise"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📐 1. Geometry", "📦 2. Loads", "📊 3. Results", "⚖️ 4. Optimise", "📓 5. Download Notebook"])
 
 # ─────────────────────────────────────────────────────────────────────────────
 with tab1:
     st.subheader("Beam Geometry")
     c1, c2 = st.columns([1, 2])
     with c1:
-        L   = st.slider("Total length L (m)", 5.0, 20.0, 10.0, 0.5, key="cap_L")
-        x_A = st.slider("Pin A position (m)", 0.0, L * 0.45, 2.0, 0.5, key="cap_xA")
-        x_B = st.slider("Roller B position (m)", x_A + 0.5, L, min(8.0, L), 0.5, key="cap_xB")
+        _g  = st.session_state.geometry
+        L   = st.slider("Total length L (m)", 5.0, 20.0, _g["L_total"], 0.5, key="cap_L")
+        x_A = st.slider("Pin A position (m)", 0.0, L * 0.45, min(_g["x_A"], L * 0.45), 0.5, key="cap_xA")
+        x_B = st.slider("Roller B position (m)", x_A + 0.5, L, max(min(_g["x_B"], L), x_A + 0.5), 0.5, key="cap_xB")
         st.session_state.cap_geo = {"L_total": L, "x_A": x_A, "x_B": x_B}
         cant_L = x_A; cant_R = L - x_B; span = x_B - x_A
         st.markdown(f"""
@@ -321,8 +333,49 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# ── Tab 5: Download Notebook ─────────────────────────────────────────────────
+with tab5:
+    st.subheader("Download Your Course Notebook")
+    st.markdown("""
+The notebook is a self-contained `.ipynb` file you can run in **JupyterLab**,
+**VS Code**, or **Google Colab** — no course installation needed.
+
+It contains:
+- Your beam geometry and loads pre-filled
+- Every solver function defined with annotated comments
+- All plots: beam diagram, SFD, BMD, and superposition breakdown
+- The complete three-panel analysis figure
+
+**Requirements:** `numpy`, `scipy`, `matplotlib` (standard in any Python environment)
+""")
+
+    _geo   = st.session_state.geometry
+    _loads = st.session_state.loads
+
+    if not _loads:
+        st.info("Add loads in **Lesson 3** first — the notebook will embed your actual beam.")
+    else:
+        st.markdown(f"""
+**Beam that will be embedded:**
+L = {_geo['L_total']:.1f} m · Pin A at {_geo['x_A']:.1f} m · Roller B at {_geo['x_B']:.1f} m · {len(_loads)} load(s)
+""")
+        try:
+            _nb_json = generate_notebook(_geo, _loads)
+            st.download_button(
+                label="⬇ Download notebook (.ipynb)",
+                data=_nb_json,
+                file_name="beam_analysis_course.ipynb",
+                mime="application/json",
+                type="primary",
+                use_container_width=True,
+            )
+        except Exception as e:
+            st.error(f"Notebook generation failed: {e}")
+
 lesson_nav(
     prev_label="L06 — Bending Moment",
     prev_page="pages/06_L06_Bending_Moment.py",
+    next_label="S1 — Superposition",
+    next_page="pages/08_L08_Superposition.py",
 )
 

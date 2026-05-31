@@ -13,12 +13,19 @@ sys.path.insert(0, os.path.join(BASE, "..", "course", "shared"))
 
 from code_runner import practice_block, lesson_nav
 from plot_helpers import draw_beam, draw_loads, draw_reactions, draw_sfd
+from styles import apply_styles, lesson_progress, in_practice, key_takeaways
 import beam_solver
 
 st.set_page_config(page_title="L05 — Shear Force Diagram", page_icon="📊", layout="wide")
+apply_styles()
+
+if "geometry" not in st.session_state:
+    st.session_state.geometry = {"L_total": 10.0, "x_A": 2.0, "x_B": 8.0}
+if "loads" not in st.session_state:
+    st.session_state.loads = []
 
 st.title("Lesson 5 — Shear Force Diagram")
-st.caption("Prerequisites: Lessons 1–4  ·  Time: ~60 minutes")
+lesson_progress(5, 7, "Prerequisites: L01–L04  ·  ~60 minutes")
 st.markdown("""
 The shear force at any section is the sum of all vertical forces to the **left** of that section.
 Build the diagram by repeating this calculation at 500 points along the beam.
@@ -28,68 +35,48 @@ Build the diagram by repeating this calculation at 500 points along the beam.
 st.markdown("## 📊 Theory — Interactive SFD")
 # ══════════════════════════════════════════════════════════════════════════════
 
-col_ctrl, col_plot = st.columns([1, 2])
+geo   = st.session_state.geometry
+loads = st.session_state.loads
 
-with col_ctrl:
-    st.markdown("**Beam geometry:**")
-    L   = st.slider("L (m)", 5.0, 15.0, 10.0, 0.5, key="sfd_L")
-    x_A = st.slider("Pin A (m)", 0.0, L * 0.45, 2.0, 0.5, key="sfd_xA")
-    x_B = st.slider("Roller B (m)", x_A + 0.5, L, min(8.0, L), 0.5, key="sfd_xB")
+if not loads:
+    st.info("No loads defined yet — set up your beam in **Lesson 2** and add loads in **Lesson 3**.")
+else:
+    R_A, R_B = beam_solver.compute_reactions(geo, loads)
+    x, V     = beam_solver.compute_shear(geo, loads, R_A, R_B)
 
-    st.markdown("**Loads:**")
-    P1  = st.slider("Point load at midspan (kN)", -80.0, 0.0, -20.0, 5.0)
-    w1  = st.slider("Full-span UDL (kN/m)", -15.0, 0.0, 0.0, 1.0)
-    P_tip = st.slider("Load at left cantilever tip (kN)", -40.0, 0.0, 0.0, 5.0)
-    show_zeros = st.checkbox("Show V = 0 locations", value=True)
+    show_zeros = st.checkbox("Mark V = 0 crossings", value=True)
 
-    geo   = {"L_total": L, "x_A": x_A, "x_B": x_B}
-    loads = []
-    mid   = (x_A + x_B) / 2
-    if P1 != 0:
-        loads.append({"type": "point", "x": mid, "magnitude": P1})
-    if w1 != 0:
-        loads.append({"type": "udl", "x1": 0.0, "x2": L, "w": w1})
-    if P_tip != 0:
-        loads.append({"type": "point", "x": 0.0, "magnitude": P_tip})
+    fig, (ax_b, ax_s) = plt.subplots(2, 1, figsize=(10, 6),
+                                      gridspec_kw={"height_ratios": [1, 2.2]})
+    fig.subplots_adjust(hspace=0.07)
+    draw_beam(ax_b, geo)
+    draw_loads(ax_b, loads, geo["L_total"])
+    draw_reactions(ax_b, geo["x_A"], geo["x_B"], R_A, R_B)
 
-with col_plot:
-    if not loads:
-        st.info("Add a load using the sliders on the left to see the SFD.")
-    else:
-        R_A, R_B = beam_solver.compute_reactions(geo, loads)
-        x, V     = beam_solver.compute_shear(geo, loads, R_A, R_B)
+    ax_s.plot(x, V, "#1565C0", lw=2.2)
+    ax_s.fill_between(x, V, 0, where=(V >= 0), color="#90CAF9", alpha=0.5)
+    ax_s.fill_between(x, V, 0, where=(V < 0),  color="#EF9A9A", alpha=0.5)
+    ax_s.axhline(0, color="k", lw=0.8)
 
-        fig, (ax_b, ax_s) = plt.subplots(2, 1, figsize=(9, 7),
-                                          gridspec_kw={"height_ratios": [1, 2.2]})
-        fig.subplots_adjust(hspace=0.06)
+    if show_zeros:
+        for idx in np.where(np.diff(np.sign(V)))[0]:
+            ax_s.axvline(x[idx], color="red", ls="--", lw=1, alpha=0.7)
+            ax_s.text(x[idx] + 0.1, V.min() * 0.85,
+                      f"V=0\n({x[idx]:.1f}m)", fontsize=7.5, color="red")
 
-        draw_beam(ax_b, geo)
-        draw_loads(ax_b, loads, L)
-        draw_reactions(ax_b, x_A, x_B, R_A, R_B)
+    ax_s.set_ylabel("Shear V (kN)", fontsize=9)
+    ax_s.set_xlabel("Position x (m)", fontsize=10)
+    ax_s.grid(True, ls="--", alpha=0.4)
+    ax_s.set_xlim(ax_b.get_xlim())
+    ax_s.set_title("Shear Force Diagram", fontsize=9, pad=5)
+    st.pyplot(fig, width='stretch')
+    plt.close(fig)
 
-        ax_s.plot(x, V, "#1565C0", lw=2.2)
-        ax_s.fill_between(x, V, 0, where=(V>=0), color="#90CAF9", alpha=0.5)
-        ax_s.fill_between(x, V, 0, where=(V<0),  color="#EF9A9A", alpha=0.5)
-        ax_s.axhline(0, color="k", lw=0.8)
-
-        if show_zeros:
-            zc = np.where(np.diff(np.sign(V)))[0]
-            for idx in zc:
-                ax_s.axvline(x[idx], color="red", ls="--", lw=1, alpha=0.7)
-                ax_s.text(x[idx] + 0.1, V.min() * 0.85,
-                          f"V=0\n({x[idx]:.1f}m)", fontsize=7.5, color="red")
-
-        ax_s.set_ylabel("Shear V (kN)", fontsize=9)
-        ax_s.set_xlabel("Position x (m)", fontsize=10)
-        ax_s.grid(True, ls="--", alpha=0.4)
-        ax_s.set_xlim(ax_b.get_xlim())
-        ax_s.set_title(
-            f"SFD  |  R_A={R_A:+.1f} kN  |  R_B={R_B:+.1f} kN  |  "
-            f"V_max={V.max():+.1f}  V_min={V.min():+.1f} kN",
-            fontsize=9, pad=5
-        )
-        st.pyplot(fig, width='stretch')
-        plt.close(fig)
+    mc1, mc2, mc3, mc4 = st.columns(4)
+    mc1.metric("R_A", f"{R_A:+.2f} kN")
+    mc2.metric("R_B", f"{R_B:+.2f} kN")
+    mc3.metric("V_max", f"{V.max():+.1f} kN")
+    mc4.metric("V_min", f"{V.min():+.1f} kN")
 
 st.markdown("---")
 st.markdown("""
@@ -104,6 +91,20 @@ st.markdown("""
 # ══════════════════════════════════════════════════════════════════════════════
 # PRACTICE
 # ══════════════════════════════════════════════════════════════════════════════
+
+in_practice(
+    "Shear force governs the design of beam webs and connectors. In a steel beam, "
+    "the web thickness is sized from V_max using the shear capacity formula. "
+    "In a concrete beam, stirrups are spaced based on the shear envelope — exactly "
+    "the diagram you have just plotted."
+)
+
+key_takeaways([
+    "V = 0 at both free ends — guaranteed by equilibrium, not an assumption",
+    "V **jumps** by the load magnitude at every point load, and by R_A or R_B at each support",
+    "V has a **linear slope** under a UDL (slope = w, in kN/m)",
+    "Where V = 0, the bending moment is at a local maximum — this is the critical section for design",
+])
 
 # Pre-define the reaction solver for the practice section
 def _compute_reactions(geometry, loads):

@@ -13,12 +13,19 @@ sys.path.insert(0, os.path.join(BASE, "..", "course", "shared"))
 
 from code_runner import practice_block, lesson_nav
 from plot_helpers import draw_beam, draw_loads, draw_reactions
+from styles import apply_styles, lesson_progress, in_practice, key_takeaways
 import beam_solver
 
 st.set_page_config(page_title="L04 — Reactions", page_icon="⚖️", layout="wide")
+apply_styles()
+
+if "geometry" not in st.session_state:
+    st.session_state.geometry = {"L_total": 10.0, "x_A": 2.0, "x_B": 8.0}
+if "loads" not in st.session_state:
+    st.session_state.loads = []
 
 st.title("Lesson 4 — Finding Support Reactions")
-st.caption("Prerequisites: Lessons 1–3  ·  Time: ~60 minutes")
+lesson_progress(4, 7, "Prerequisites: L01–L03  ·  ~60 minutes")
 st.markdown("""
 With the beam geometry and loads defined, we solve for the support reactions using
 two equilibrium equations. Python makes this calculation instant and repeatable.
@@ -58,52 +65,41 @@ Adjust the load below and watch the reactions change:
 """)
 
 st.markdown("---")
-st.markdown("### Interactive Reaction Calculator")
 
-geo_fixed = {"L_total": 10.0, "x_A": 2.0, "x_B": 8.0}
+geo   = st.session_state.geometry
+loads = st.session_state.loads
 
-col_ctrl, col_plot = st.columns([1, 2])
+if not loads:
+    st.info("No loads defined yet — set up your beam in **Lesson 2** and add loads in **Lesson 3**.")
+else:
+    R_A, R_B = beam_solver.compute_reactions(geo, loads)
+    st.session_state.R_A = R_A
+    st.session_state.R_B = R_B
 
-with col_ctrl:
-    load_x   = st.slider("Load position x (m)", 0.0, 10.0, 5.0, 0.5)
-    load_mag = st.slider("Load magnitude (kN)  negative = down", -100.0, 100.0, -30.0, 5.0)
-    show_udl = st.checkbox("Add a full-span UDL of −4 kN/m")
-
-    loads_demo = [{"type": "point", "x": load_x, "magnitude": load_mag}]
-    if show_udl:
-        loads_demo.append({"type": "udl", "x1": 0.0, "x2": 10.0, "w": -4.0})
-
-    R_A, R_B = beam_solver.compute_reactions(geo_fixed, loads_demo)
-
-    st.markdown("---")
     total_load = sum(
         ld["magnitude"] if ld["type"] == "point"
         else ld["w"] * (ld["x2"] - ld["x1"])
-        for ld in loads_demo
+        for ld in loads
     )
-    st.markdown(f"""
-| | Value |
-|---|---|
-| Total applied load | **{total_load:+.1f} kN** |
-| Reaction R_A | **{R_A:+.2f} kN** {"⬆️" if R_A > 0 else "⬇️"} |
-| Reaction R_B | **{R_B:+.2f} kN** {"⬆️" if R_B > 0 else "⬇️"} |
-| Check R_A+R_B+loads | **{R_A+R_B+total_load:.2e} kN** ≈ 0 ✓ |
-""")
-    if R_B < 0:
-        st.warning("R_B is negative — the roller is being pulled **downward**. "
-                   "This means it must be anchored to the ground.")
-
-with col_plot:
-    fig, ax = plt.subplots(figsize=(9, 4.5))
-    draw_beam(ax, geo_fixed)
-    draw_loads(ax, loads_demo, 10.0)
-    draw_reactions(ax, 2.0, 8.0, R_A, R_B)
-    ax.set_title(
-        f"R_A = {R_A:+.2f} kN   |   R_B = {R_B:+.2f} kN",
-        fontsize=11, pad=8
-    )
-    st.pyplot(fig, width='stretch')
-    plt.close(fig)
+    col_l, col_r = st.columns([1, 2])
+    with col_l:
+        mc1, mc2 = st.columns(2)
+        mc1.metric("R_A", f"{R_A:+.2f} kN",
+                   delta="upward" if R_A >= 0 else "downward")
+        mc2.metric("R_B", f"{R_B:+.2f} kN",
+                   delta="upward" if R_B >= 0 else "downward")
+        st.metric("Total applied load", f"{total_load:+.1f} kN")
+        st.caption(f"Equilibrium check ΣFy = {R_A + R_B + total_load:.2e} kN ≈ 0 ✓")
+        if R_B < 0:
+            st.warning("R_B is negative — the roller is being pulled downward.")
+    with col_r:
+        fig, ax = plt.subplots(figsize=(9, 3.2))
+        draw_beam(ax, geo)
+        draw_loads(ax, loads, geo["L_total"])
+        draw_reactions(ax, geo["x_A"], geo["x_B"], R_A, R_B)
+        ax.set_title(f"R_A = {R_A:+.2f} kN   |   R_B = {R_B:+.2f} kN", fontsize=10)
+        st.pyplot(fig, width='stretch')
+        plt.close(fig)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PRACTICE
@@ -191,6 +187,19 @@ print(f"Reaction R_B = {R_B:+.2f} kN")
 residual = R_A + R_B + total_force
 print(f"Check ΣFy   = {residual:.2e} kN  (should be ≈ 0)")
 """
+
+in_practice(
+    "Before any FEA software existed, engineers computed reactions by hand using exactly "
+    "these two equations. The software still solves the same linear system — your ten lines "
+    "of Python are doing what a commercial package does for a simply supported beam."
+)
+
+key_takeaways([
+    "Two equilibrium equations always suffice for a simply supported beam: ΣM = 0 gives R_B, then ΣFy = 0 gives R_A",
+    "A load on the cantilever creates a moment about A that can make R_B **negative** — the roller is pulled down",
+    "Always verify: `R_A + R_B + total_load = 0` — this self-check costs one line and catches every sign error",
+    "The `compute_reactions` function is the core of the entire beam solver built in later lessons",
+])
 
 practice_block(
     key="L04",
