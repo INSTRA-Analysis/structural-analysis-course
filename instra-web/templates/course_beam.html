@@ -32,7 +32,7 @@
     </div>
 
     <div style="margin-top:2rem; display:flex; gap:1rem; flex-wrap:wrap;">
-      <a href="#course-app" class="btn btn-primary btn-lg">Launch Interactive Course ↓</a>
+      <a href="{{ url_for('course_beam_tool') }}" class="btn btn-primary btn-lg">Launch the Tool →</a>
       <a href="#lessons" class="btn btn-outline">View Lesson Plan</a>
     </div>
 
@@ -113,26 +113,20 @@
   </div>
 </section>
 
-<!-- ── Launch course ─────────────────────────────────── -->
+<!-- ── Launch the tool ────────────────────────────── -->
 <section class="cta-banner" id="course-app" style="padding: 5rem 2rem;">
-  <div style="max-width: 620px; margin: 0 auto; text-align: center;">
+  <div style="max-width: 460px; margin: 0 auto; text-align: center;">
     <div style="font-size: 3rem; margin-bottom: 1rem;">📐</div>
-    <h2 style="color: #fff; margin-bottom: 1rem;">Ready to start coding?</h2>
+    <h2 style="color: #fff; margin-bottom: 0.75rem;">Open the analysis tool</h2>
     <p style="color: rgba(255,255,255,0.75); margin-bottom: 2rem; font-size: 1.05rem;">
-      The interactive course opens in a new tab — a full Python environment
-      with live diagrams, a built-in code editor, and worked solutions.
-      No installation required.
+      Free and runs entirely in your browser — reactions, shear, bending moment
+      and deflection, plus a downloadable Jupyter notebook. No sign-up required.
     </p>
-    <a href="{{ streamlit_url }}"
-       target="_blank"
-       rel="noopener"
-       class="btn btn-primary btn-lg"
-       style="font-size: 1.1rem; padding: 1rem 2.5rem;">
-      Launch Interactive Course ↗
+
+    <a href="{{ url_for('course_beam_tool') }}" class="btn btn-primary btn-lg"
+       style="font-size:1.05rem; padding:0.9rem 2rem; justify-content:center;">
+      Launch the Tool →
     </a>
-    <p style="margin-top: 1.5rem; font-size: 0.82rem; color: rgba(255,255,255,0.45);">
-      Opens in a new tab · Free · No account required
-    </p>
   </div>
 </section>
 

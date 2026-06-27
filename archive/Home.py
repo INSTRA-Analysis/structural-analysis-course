@@ -3,6 +3,7 @@ Home.py — Landing page for the INSTRA Academy course.
 Run with:  streamlit run Home.py
 """
 
+import os
 import streamlit as st
 
 st.set_page_config(
@@ -11,6 +12,15 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# ── Token gate ─────────────────────────────────────────────────────────────
+# COURSE_TOKEN env var must match the ?access= query param set by the Flask
+# enroll route. Gate is disabled in local dev (env var not set).
+_expected = os.environ.get("COURSE_TOKEN", "")
+if _expected and st.query_params.get("access", "") != _expected:
+    st.error("Please sign up to access this course.")
+    st.markdown("[← Back to course page](https://instrahub.com/courses/simply-supported-beam)")
+    st.stop()
 
 # ── Sidebar ────────────────────────────────────────────────────────────────
 with st.sidebar:

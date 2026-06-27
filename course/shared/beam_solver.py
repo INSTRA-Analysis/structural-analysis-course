@@ -27,7 +27,23 @@ then summed via superposition — exactly as done by hand.
 """
 
 import numpy as np
-from scipy.integrate import cumulative_trapezoid
+
+
+def cumulative_trapezoid(y, x, initial=0.0):
+    """
+    Cumulative trapezoidal integral of y w.r.t. x, numpy-only.
+
+    Drop-in for scipy.integrate.cumulative_trapezoid(y, x, initial=0.0):
+    returns an array the same length as y, starting at `initial`.
+    Implemented locally so this module (and the in-browser Pyodide build) has
+    no scipy dependency — scipy is a very large WebAssembly download.
+    """
+    y = np.asarray(y, dtype=float)
+    x = np.asarray(x, dtype=float)
+    out = np.empty_like(y)
+    out[0] = initial
+    out[1:] = initial + np.cumsum(0.5 * (y[1:] + y[:-1]) * np.diff(x))
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -145,6 +161,79 @@ def compute_moments(x_array, V):
     """
     M = cumulative_trapezoid(V, x_array, initial=0.0)
     return M
+
+
+# ---------------------------------------------------------------------------
+# Deflection (Euler–Bernoulli, double integration of M/EI)
+# ---------------------------------------------------------------------------
+
+def compute_deflection(x_array, M, EI, x_A, x_B):
+    """
+    Compute the transverse deflection δ(x) by double-integrating the
+    moment–curvature relation, then enforcing the two support boundary
+    conditions δ(x_A) = 0 and δ(x_B) = 0.
+
+    Euler–Bernoulli small-deflection theory:
+        d²δ/dx² = M(x) / EI            (curvature κ)
+    Integrating once gives the slope, twice gives the deflection. The two
+    constants of integration are fixed by the supports — here we apply them
+    *after* the raw double integration by subtracting the unique straight
+    line that makes δ vanish at both supports (valid because adding a linear
+    function changes δ but not its curvature M/EI).
+
+    Units — keep these consistent or the magnitude will be wrong
+    -----------------------------------------------------------
+        x_array : m
+        M       : kN·m
+        EI      : kN·m²
+        → δ computed in m, returned in **mm** (× 1000).
+
+    Convenience for the usual engineering inputs (E in GPa, I in cm⁴):
+        1 GPa  = 1e6 kN/m²
+        1 cm⁴  = 1e-8 m⁴
+        ⇒ EI[kN·m²] = E[GPa] * I[cm⁴] * 1e-2
+
+    Parameters
+    ----------
+    x_array : numpy array  shape (n,)   positions along the beam (m), increasing
+    M       : numpy array  shape (n,)   bending moment (kN·m)
+    EI      : float                     flexural rigidity (kN·m²), must be > 0
+    x_A, x_B: float                     pin / roller positions (m), x_A < x_B
+
+    Returns
+    -------
+    delta : numpy array  shape (n,)  deflection in mm
+            (downward positive depends on the M sign convention; with the
+             sagging-positive M used here, sagging curvature gives a
+             downward sag between the supports as expected).
+
+    Notes
+    -----
+    Deflection at the cantilever tips is a genuine extrapolation of the
+    elastic curve and can be large — that is physically correct, not an error.
+    """
+    if EI <= 0:
+        raise ValueError("EI must be positive (got %r)." % (EI,))
+    if x_B <= x_A:
+        raise ValueError("x_B must be greater than x_A.")
+
+    # Curvature, then two successive trapezoidal integrations.
+    kappa     = M / EI                                          # 1/m
+    slope_raw = cumulative_trapezoid(kappa,     x_array, initial=0.0)
+    defl_raw  = cumulative_trapezoid(slope_raw, x_array, initial=0.0)  # m
+
+    # Raw deflection sampled exactly at the supports (linear interpolation
+    # is more accurate than snapping to the nearest grid index).
+    d_A = np.interp(x_A, x_array, defl_raw)
+    d_B = np.interp(x_B, x_array, defl_raw)
+
+    # Subtract the straight line through (x_A, d_A) and (x_B, d_B) so that the
+    # corrected deflection is exactly zero at both supports.
+    c0 = d_A
+    c1 = (d_B - d_A) / (x_B - x_A)
+    delta = defl_raw - (c0 + c1 * (x_array - x_A))             # m
+
+    return delta * 1000.0                                      # → mm
 
 
 # ---------------------------------------------------------------------------

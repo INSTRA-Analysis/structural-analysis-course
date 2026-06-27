@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Beam Analysis Tool — INSTRA Academy{% endblock %}
+{% block meta_description %}Interactive simply supported beam analysis tool — reactions, shear, bending moment and deflection, computed in your browser.{% endblock %}
+
+{% block head %}
+  <!-- Pyodide (Python in WebAssembly) — the component calls window.loadPyodide() -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.js"></script>
+
+  <!-- React, self-hosted (no CDN dependency). The component is authored in JSX
+       (static/js/beam_tool.jsx) and precompiled to plain JS (beam_tool.js) with
+       Babel at build time — so there is NO in-browser transpilation. Rebuild
+       after editing the .jsx:  npx babel beam_tool.jsx --presets @babel/preset-react -o beam_tool.js -->
+  <script src="{{ url_for('static', filename='js/vendor/react.production.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/vendor/react-dom.production.min.js') }}"></script>
+
+  <style>
+    /* The dark tool is full-bleed inside the light site chrome. */
+    main { padding: 0; }
+    #beam-tool-root {
+      min-height: calc(100vh - var(--nav-h));
+      background: #0f1923;
+    }
+    #beam-tool-loading {
+      min-height: calc(100vh - var(--nav-h));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f1923;
+      color: #7f8fa4;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div id="beam-tool-root">
+    <div id="beam-tool-loading">Loading analysis tool…</div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <!-- Where Pyodide should fetch the canonical Python modules from (whitelisted). -->
+  <script>
+    window.IH_PYSRC_BASE = "{{ url_for('course_beam_tool') }}/pysrc";
+  </script>
+  <script src="{{ url_for('static', filename='js/beam_tool.js') }}"></script>
+{% endblock %}

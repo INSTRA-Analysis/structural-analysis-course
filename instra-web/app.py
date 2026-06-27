@@ -4,12 +4,19 @@ Run: python app.py
 Browse: http://localhost:5000
 """
 
-from flask import Flask, render_template, request
+import os
+from flask import Flask, render_template, abort, Response
 
 app = Flask(__name__)
 
 # ── Config ─────────────────────────────────────────────────────────────────
-STREAMLIT_URL = "https://structural-analysis-course-66mh8gejittd5yrbcyhdur.streamlit.app"
+# The beam tool now runs in-house (Pyodide, client-side) — no external Streamlit
+# app. The canonical Python physics lives in ../course/shared and is served to
+# the browser via the whitelisted `pysrc` route below.
+SHARED_DIR = os.path.join(os.path.dirname(__file__), "..", "course", "shared")
+
+# Only these modules may be fetched into Pyodide — never an arbitrary path.
+PYSRC_WHITELIST = {"beam_solver.py", "notebook_generator.py"}
 
 # ── Full INSTRA Academy curriculum ──────────────────────────────────────────
 # Ordered by complexity: each course adds one new conceptual layer
@@ -168,7 +175,32 @@ def courses():
 @app.route("/courses/simply-supported-beam")
 def course_beam():
     course = next(c for c in COURSES if c["slug"] == "simply-supported-beam")
-    return render_template("course_beam.html", course=course, streamlit_url=STREAMLIT_URL)
+    return render_template("course_beam.html", course=course)
+
+
+@app.route("/courses/simply-supported-beam/tool")
+def course_beam_tool():
+    """The in-house interactive beam analysis tool (Pyodide, client-side)."""
+    return render_template("beam_tool.html")
+
+
+@app.route("/courses/simply-supported-beam/tool/pysrc/<path:name>")
+def beam_tool_pysrc(name):
+    """
+    Serve the canonical Python source modules to Pyodide running in the browser.
+
+    Whitelisted to the shared physics/notebook modules only — `name` is matched
+    against PYSRC_WHITELIST so no arbitrary file can be read.
+    """
+    if name not in PYSRC_WHITELIST:
+        abort(404)
+    path = os.path.join(SHARED_DIR, name)
+    if not os.path.isfile(path):
+        abort(404)
+    with open(path, "r", encoding="utf-8") as fh:
+        source = fh.read()
+    # text/plain so the browser fetch() returns the raw source for Pyodide.FS.
+    return Response(source, mimetype="text/plain; charset=utf-8")
 
 
 @app.route("/about")
