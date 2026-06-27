@@ -9,29 +9,45 @@
 
   <!-- React, self-hosted (no CDN dependency). The component is authored in JSX
        (static/js/beam_tool.jsx) and precompiled to plain JS (beam_tool.js) with
-       Babel at build time — so there is NO in-browser transpilation. Rebuild
-       after editing the .jsx:  npx babel beam_tool.jsx --presets @babel/preset-react -o beam_tool.js -->
+       the CLASSIC React runtime — no in-browser transpilation. Rebuild after
+       editing the .jsx (config lives next to it):
+         npx babel beam_tool.jsx --config-file ./babel.config.json -o beam_tool.js -->
   <script src="{{ url_for('static', filename='js/vendor/react.production.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/vendor/react-dom.production.min.js') }}"></script>
 
   <style>
-    /* The dark tool is full-bleed inside the light site chrome. */
+    /* The tool is full-bleed; its own (light) palette matches the site. */
     main { padding: 0; }
     #beam-tool-root {
       min-height: calc(100vh - var(--nav-h));
-      background: #0f1923;
+      background: #F5F7FA;
     }
     #beam-tool-loading {
       min-height: calc(100vh - var(--nav-h));
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #0f1923;
-      color: #7f8fa4;
+      background: #F5F7FA;
+      color: #5A6070;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.9rem;
     }
   </style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb-bar"><div class="container">
+  <a href="{{ url_for('hub.index') }}">InstraHub</a>
+  <span class="sep">›</span>
+  <a href="{{ url_for('academy.home') }}">INSTRA Academy</a>
+  <span class="sep">›</span>
+  <a href="{{ url_for('academy.courses') }}">Courses</a>
+  <span class="sep">›</span>
+  <a href="{{ url_for('academy.course_beam') }}">Simply Supported Beam</a>
+  <span class="sep">›</span>
+  <span class="current">Tool</span>
+  <a href="{{ url_for('academy.course_beam') }}" style="margin-left:auto;">← Back to course</a>
+</div></nav>
 {% endblock %}
 
 {% block content %}
@@ -43,7 +59,7 @@
 {% block scripts %}
   <!-- Where Pyodide should fetch the canonical Python modules from (whitelisted). -->
   <script>
-    window.IH_PYSRC_BASE = "{{ url_for('course_beam_tool') }}/pysrc";
+    window.IH_PYSRC_BASE = "{{ url_for('academy.course_beam_tool') }}/pysrc";
   </script>
   <script src="{{ url_for('static', filename='js/beam_tool.js') }}"></script>
 {% endblock %}

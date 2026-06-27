@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — InstraHub{% endblock %}
+{% block meta_description %}{{ blurb }}{% endblock %}
+
+{% block content %}
+
+<section class="page-hero">
+  <div class="container">
+    <p class="section-label">{{ eyebrow }}</p>
+    <h1>{{ title }}</h1>
+    <p>{{ blurb }}</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container text-center">
+    <div style="font-size:3rem; margin-bottom:1rem;">🚧</div>
+    <h2>Coming soon</h2>
+    <p style="max-width:520px; margin:0.5rem auto 2rem;">
+      This part of InstraHub is in development. In the meantime, explore INSTRA Academy —
+      our interactive structural analysis courses are live and free to start.
+    </p>
+    <a href="{{ url_for('academy.home') }}" class="btn btn-primary btn-lg">Explore the Academy →</a>
+  </div>
+</section>
+
+{% endblock %}

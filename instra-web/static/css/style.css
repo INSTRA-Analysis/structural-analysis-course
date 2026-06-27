@@ -28,6 +28,25 @@
   --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
 }
 
+/* ── Breadcrumb bar ─────────────────────────────────── */
+.breadcrumb-bar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+.breadcrumb-bar .container {
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+  font-size: 0.82rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.breadcrumb-bar a { color: var(--text-muted); }
+.breadcrumb-bar a:hover { color: var(--navy); }
+.breadcrumb-bar .sep { color: var(--text-light); opacity: 0.6; }
+.breadcrumb-bar .current { color: var(--text); font-weight: 600; }
+
 /* ── Reset ──────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }

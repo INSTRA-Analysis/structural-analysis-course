@@ -1,21 +1,25 @@
 """
-INSTRA website — Flask development server.
-Run: python app.py
+InstraHub website — Flask development server.
+Run:    python app.py
 Browse: http://localhost:5000
+
+InstraHub is the parent platform. It is organised into sections, each a Flask
+blueprint so new sections (apps, services, …) can be added without disturbing
+the others:
+
+  hub      — the InstraHub platform: landing, about, section stubs   (/)
+  academy  — INSTRA Academy: courses, the beam tool, Pyodide source  (/instra-academy)
+
+The original flat /courses/... URLs are kept as permanent (301) redirects into
+the academy blueprint so existing links and bookmarks never break.
 """
 
 import os
-from flask import Flask, render_template, abort, Response
+from flask import (Flask, Blueprint, render_template, redirect,
+                   url_for, abort, Response)
 
-app = Flask(__name__)
-
-# ── Config ─────────────────────────────────────────────────────────────────
-# The beam tool now runs in-house (Pyodide, client-side) — no external Streamlit
-# app. The canonical Python physics lives in ../course/shared and is served to
-# the browser via the whitelisted `pysrc` route below.
+# ── Shared Python source served to the in-browser Pyodide tool ──────────────
 SHARED_DIR = os.path.join(os.path.dirname(__file__), "..", "course", "shared")
-
-# Only these modules may be fetched into Pyodide — never an arbitrary path.
 PYSRC_WHITELIST = {"beam_solver.py", "notebook_generator.py"}
 
 # ── Full INSTRA Academy curriculum ──────────────────────────────────────────
@@ -28,26 +32,26 @@ COURSES = [
     {
         "slug": "simply-supported-beam",
         "title": "Simply Supported Beam Analysis",
-        "subtitle": "7 lessons · Beginner · Free",
+        "subtitle": "Interactive tool · Beginner · Free",
         "description": (
-            "Build a complete beam analysis tool from scratch in Python. "
-            "Reactions, shear force, bending moment — all with live interactive widgets. "
-            "No prior Python knowledge required."
+            "Build and use a complete beam analysis tool right in your browser — "
+            "reactions, shear, bending moment and deflection — then write the Python "
+            "behind it yourself. No prior Python knowledge required."
         ),
-        "tags": ["Free", "Python", "Reactions", "SFD", "BMD"],
+        "tags": ["Free", "Python", "Interactive", "Deflection", "Notebook"],
         "status": "available",
+        "format": "Interactive tool",
         "lessons": 7,
         "level": "Beginner",
-        "duration": "~4 hours",
+        "duration": "~2 hours",
         "dof": "— (equilibrium, no matrix)",
         "topics": [
-            "Python variables, functions, and NumPy arrays",
-            "Beam geometry — span, cantilevers, support positions",
-            "Point loads and UDL — sign convention and placement",
-            "Support reactions from equilibrium (ΣFy = 0, ΣM = 0)",
-            "Shear Force Diagram from first principles",
-            "Bending Moment Diagram by numerical integration",
-            "Complete parametric analysis tool with PDF export",
+            "Set up an overhanging beam — span, cantilevers and support positions — with live diagrams",
+            "Apply point loads and a UDL using the correct sign convention",
+            "Compute reactions, shear, bending moment and deflection, with diagrams",
+            "Write the Python yourself — from filling blanks to rebuilding the solver",
+            "Size the most economical section against deflection and bending-strength limits",
+            "Export a self-contained Jupyter notebook of your model and analysis",
         ],
     },
     {
@@ -160,37 +164,82 @@ COURSES = [
 ]
 
 
-# ── Routes ──────────────────────────────────────────────────────────────────
+# ════════════════════════════════════════════════════════════════════════════
+# Hub blueprint — the InstraHub platform
+# ════════════════════════════════════════════════════════════════════════════
+hub = Blueprint("hub", __name__)
 
-@app.route("/")
+
+@hub.route("/")
 def index():
-    return render_template("index.html", courses=COURSES)
+    return render_template("hub/index.html", courses=COURSES)
 
 
-@app.route("/courses")
+@hub.route("/about")
+def about():
+    return render_template("hub/about.html")
+
+
+@hub.route("/apps")
+def apps():
+    return render_template(
+        "hub/coming_soon.html",
+        eyebrow="InstraHub · Apps & Platform",
+        title="Apps & Platform",
+        blurb=("Standalone structural engineering apps — analysis tools, calculators "
+               "and utilities — released and hosted here. In development."),
+    )
+
+
+@hub.route("/services")
+def services():
+    return render_template(
+        "hub/coming_soon.html",
+        eyebrow="InstraHub · Services",
+        title="Services",
+        blurb=("Consulting and bespoke engineering software — built by practising "
+               "structural engineers. Coming soon."),
+    )
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Academy blueprint — INSTRA Academy (courses + the interactive tool)
+# ════════════════════════════════════════════════════════════════════════════
+academy = Blueprint("academy", __name__, url_prefix="/instra-academy")
+
+
+@academy.route("/")
+def home():
+    return render_template("academy/index.html", courses=COURSES)
+
+
+@academy.route("/courses")
 def courses():
-    return render_template("courses.html", courses=COURSES)
+    return render_template("academy/courses.html", courses=COURSES)
 
 
-@app.route("/courses/simply-supported-beam")
+@academy.route("/about")
+def about():
+    return render_template("academy/about.html")
+
+
+@academy.route("/courses/simply-supported-beam")
 def course_beam():
     course = next(c for c in COURSES if c["slug"] == "simply-supported-beam")
-    return render_template("course_beam.html", course=course)
+    return render_template("academy/course_beam.html", course=course)
 
 
-@app.route("/courses/simply-supported-beam/tool")
+@academy.route("/courses/simply-supported-beam/tool")
 def course_beam_tool():
     """The in-house interactive beam analysis tool (Pyodide, client-side)."""
-    return render_template("beam_tool.html")
+    return render_template("academy/beam_tool.html")
 
 
-@app.route("/courses/simply-supported-beam/tool/pysrc/<path:name>")
+@academy.route("/courses/simply-supported-beam/tool/pysrc/<path:name>")
 def beam_tool_pysrc(name):
     """
     Serve the canonical Python source modules to Pyodide running in the browser.
-
-    Whitelisted to the shared physics/notebook modules only — `name` is matched
-    against PYSRC_WHITELIST so no arbitrary file can be read.
+    Whitelisted to the shared physics/notebook modules only.
     """
     if name not in PYSRC_WHITELIST:
         abort(404)
@@ -198,17 +247,34 @@ def beam_tool_pysrc(name):
     if not os.path.isfile(path):
         abort(404)
     with open(path, "r", encoding="utf-8") as fh:
-        source = fh.read()
-    # text/plain so the browser fetch() returns the raw source for Pyodide.FS.
-    return Response(source, mimetype="text/plain; charset=utf-8")
+        return Response(fh.read(), mimetype="text/plain; charset=utf-8")
 
 
-@app.route("/about")
-def about():
-    return render_template("about.html")
+# ════════════════════════════════════════════════════════════════════════════
+# App + legacy redirects
+# ════════════════════════════════════════════════════════════════════════════
+app = Flask(__name__)
+app.register_blueprint(hub)
+app.register_blueprint(academy)
+
+
+# The original flat URLs are already public — 301-redirect them into the academy
+# section so existing links, bookmarks and search results keep working.
+@app.route("/courses")
+def _legacy_courses():
+    return redirect(url_for("academy.courses"), code=301)
+
+
+@app.route("/courses/simply-supported-beam")
+def _legacy_course_beam():
+    return redirect(url_for("academy.course_beam"), code=301)
+
+
+@app.route("/courses/simply-supported-beam/tool")
+def _legacy_course_beam_tool():
+    return redirect(url_for("academy.course_beam_tool"), code=301)
 
 
 # ── Dev server ──────────────────────────────────────────────────────────────
-
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

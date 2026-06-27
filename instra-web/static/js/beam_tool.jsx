@@ -24,17 +24,17 @@ const { useState, useEffect } = React;
 
 /* ── Design tokens — the single source of colour for the whole tool ──────── */
 const C = {
-  navyDeep:    "#0f1923",   // page background
-  navy:        "#1a2332",   // card / panel background
-  navyLight:   "#243044",   // input / stat card background
-  navyBorder:  "#2e3d52",   // all borders
-  teal:        "#1abc9c",   // primary accent, supports, idle state
-  amber:       "#f39c12",   // run button, deflection, UDL
+  navyDeep:    "#F5F7FA",   // page background (light, matches the site)
+  navy:        "#FFFFFF",   // card / panel background
+  navyLight:   "#EEF1F6",   // input / stat card / beam fill background
+  navyBorder:  "#E0E4EC",   // all borders
+  teal:        "#1A2B4A",   // primary accent (brand navy): supports, active tab, reactions, headings
+  amber:       "#C8972B",   // call-to-action (brand gold): run/download buttons, UDL, deflection accent
   red:         "#C0392B",   // point loads, errors, tension
   blue:        "#2471A3",   // shear force, compression
-  textPrimary: "#e8edf3",
-  textMuted:   "#7f8fa4",
-  textCode:    "#c9d8ed",
+  textPrimary: "#1A1A2E",
+  textMuted:   "#5A6070",
+  textCode:    "#243660",
 };
 
 const PY_INDEX_URL = "https://cdn.jsdelivr.net/pyodide/v0.27.6/full/";
@@ -107,27 +107,29 @@ stats = {"RA": float(RA), "RB": float(RB),
          "Mmax": _amax(M), "Vmax": _amax(V), "dmax": _amax(defl)}
 
 # ── Dark, three-panel figure (SFD / BMD / deflection) ──────────────────────
-NAVY_BG, PANEL, GRID, TICK = "#0f1923", "#1a2332", "#2e3d52", "#7f8fa4"
+NAVY_BG, PANEL, GRID, TICK = "#FFFFFF", "#FFFFFF", "#E0E4EC", "#5A6070"
 fig, axes = plt.subplots(3, 1, figsize=(7.6, 8.4), facecolor=NAVY_BG)
 panels = [
     (axes[0], V,    "Shear Force V (kN)",      "#2471A3"),
-    (axes[1], M,    "Bending Moment M (kN.m)", "#1abc9c"),
-    (axes[2], defl, "Deflection d (mm)",       "#f39c12"),
+    (axes[1], M,    "Bending Moment M (kN.m)", "#1B7A4B"),
+    (axes[2], defl, "Deflection d (mm)",       "#E67E22"),
 ]
 for ax, y, label, color in panels:
     ax.set_facecolor(PANEL)
     ax.plot(x, y, color=color, lw=2)
     ax.axhline(0, color=GRID, lw=1)
     for xs_ in (float(A), float(B)):
-        ax.axvline(xs_, color="#1abc9c", ls="--", lw=1, alpha=0.6)
+        ax.axvline(xs_, color="#1A2B4A", ls="--", lw=1, alpha=0.55)
     if P != 0:
         ax.axvline(float(xP), color="#C0392B", ls=":", lw=1, alpha=0.75)
     ax.set_ylabel(label, color=TICK, fontsize=9)
-    ax.grid(True, color=GRID, alpha=0.4, lw=0.6)
+    ax.grid(True, color=GRID, alpha=0.8, lw=0.6)
     ax.tick_params(colors=TICK, labelsize=8)
     for spine in ax.spines.values():
         spine.set_color(GRID)
 axes[2].set_xlabel("Position x (m)", color=TICK, fontsize=9)
+# BMD convention: draw sagging (positive) moment downward (tension side).
+axes[1].invert_yaxis()
 fig.tight_layout()
 
 buf = io.BytesIO()
@@ -482,7 +484,7 @@ fig, ax = plt.subplots(figsize=(8, 3))
 ax.plot(res["x"], defl, color="#E65100", lw=2)
 ax.axhline(0, color="k", lw=0.8)
 for xs in (geometry["x_A"], geometry["x_B"]):
-    ax.axvline(xs, color="#1abc9c", ls="--", lw=1)
+    ax.axvline(xs, color="#1A2B4A", ls="--", lw=1)
 ax.set_xlabel("x (m)"); ax.set_ylabel("deflection (mm)")
 ax.set_title("Deflection")
 plt.show()
@@ -510,7 +512,7 @@ fig, ax = plt.subplots(figsize=(8, 3))
 ax.plot(res["x"], defl, color="#E65100", lw=2)
 ax.axhline(0, color="k", lw=0.8)
 for xs in (geometry["x_A"], geometry["x_B"]):
-    ax.axvline(xs, color="#1abc9c", ls="--", lw=1)
+    ax.axvline(xs, color="#1A2B4A", ls="--", lw=1)
 ax.set_xlabel("x (m)"); ax.set_ylabel("deflection (mm)")
 ax.set_title("Deflection")
 plt.show()
@@ -646,6 +648,20 @@ const fmt = (v, n = 2) => (Number.isFinite(v) ? v.toFixed(n) : "—");
 /* ═══════════════════════════════════════════════════════════════════════════
    SVG beam diagram — pure SVG, no libraries. Spec from BEAM_TOOL_BRIEF.
    ═══════════════════════════════════════════════════════════════════════════ */
+/* A downward arrow drawn as explicit geometry: a vertical shaft plus a filled
+   triangular head whose apex sits at yTip. No SVG markers / orient="auto", so it
+   always points straight down and is trivial to place and resize. */
+function DownArrow({ x, yTop, yTip, color, width = 2, head = 8 }) {
+  const hw = head * 0.6;                       // head half-width
+  return (
+    <g>
+      <line x1={x} y1={yTop} x2={x} y2={yTip - head} stroke={color} strokeWidth={width} />
+      <polygon points={`${x},${yTip} ${x - hw},${yTip - head} ${x + hw},${yTip - head}`}
+               fill={color} />
+    </g>
+  );
+}
+
 function BeamDiagram({ L, A, B, P, xP, w }) {
   const W = 560, H = 140, padL = 40, padR = 40, beamY = 80;
   const beamW = W - padL - padR;          // 480
@@ -660,28 +676,21 @@ function BeamDiagram({ L, A, B, P, xP, w }) {
     for (let i = 0; i < 7; i++) {
       const ax = padL + (beamW * i) / 6;
       udlArrows.push(
-        <line key={`u${i}`} x1={ax} y1={beamY - 28} x2={ax} y2={beamY - 8}
-              stroke={C.amber} strokeWidth="1.5" markerEnd="url(#udlhead)" />
+        <DownArrow key={`u${i}`} x={ax} yTop={beamY - 28} yTip={beamY - 7}
+                   color={C.amber} width={1.5} head={6} />
       );
     }
   }
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ maxWidth: W, display: "block" }}>
-      <defs>
-        <marker id="plhead" markerWidth="9" markerHeight="9" refX="4.5" refY="8"
-                orient="auto"><path d="M0,0 L9,0 L4.5,9 z" fill={C.red} /></marker>
-        <marker id="udlhead" markerWidth="8" markerHeight="8" refX="4" refY="7"
-                orient="auto"><path d="M0,0 L8,0 L4,8 z" fill={C.amber} /></marker>
-      </defs>
-
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ maxWidth: 720, display: "block" }}>
       {/* Overhang shading */}
       {A > 0 && <rect x={padL} y={60} width={xA - padL} height={40} fill="#C0392B14" />}
       {B < L && <rect x={xB} y={60} width={padL + beamW - xB} height={40} fill="#C0392B14" />}
 
       {/* Beam */}
       <rect x={padL} y={beamY - 5} width={beamW} height={10} rx={2}
-            fill={C.navyLight} stroke={C.navyBorder} />
+            fill="#D3DAE5" stroke="#A9B4C6" />
 
       {/* UDL */}
       {w > 0 && (
@@ -697,8 +706,8 @@ function BeamDiagram({ L, A, B, P, xP, w }) {
       {/* Point load */}
       {P > 0 && (
         <g>
-          <line x1={xPp} y1={beamY - 35} x2={xPp} y2={beamY - 6}
-                stroke={C.red} strokeWidth="2.5" markerEnd="url(#plhead)" />
+          <DownArrow x={xPp} yTop={beamY - 35} yTip={beamY - 5}
+                     color={C.red} width={2.5} head={9} />
           <text x={xPp} y={beamY - 40} textAnchor="middle"
                 fill={C.red} fontSize="11">{P} kN</text>
         </g>
@@ -748,7 +757,7 @@ function SliderRow({ label, value, unit, min, max, step, onChange }) {
              onChange={(e) => onChange(parseFloat(e.target.value))}
              style={{ width: "100%", accentColor: C.teal, height: 4, marginTop: 6 }} />
       <div style={{ display: "flex", justifyContent: "space-between",
-                    fontSize: 10, color: C.navyBorder }}>
+                    fontSize: 10, color: C.textMuted }}>
         <span>{min}</span><span>{max}</span>
       </div>
     </div>
@@ -770,7 +779,7 @@ function StatCard({ label, value, unit, color }) {
 }
 
 const btnPrimary = {
-  background: C.amber, color: C.navyDeep, fontWeight: 700, border: "none",
+  background: C.amber, color: "#1A1A2E", fontWeight: 700, border: "none",
   borderRadius: 6, padding: "9px 22px", fontSize: 13, cursor: "pointer",
   fontFamily: "inherit",
 };
@@ -780,6 +789,22 @@ const btnGhost = {
   fontFamily: "inherit",
 };
 const disabledBtn = { opacity: 0.45, cursor: "not-allowed" };
+
+/* ── Two-pane layout helpers: controls (left) + canvas (right) ───────────────
+   Used across tabs so the tool fills wide screens; wraps to a single column on
+   narrow viewports (flexWrap). */
+const twoCol    = { display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" };
+const colCtrl   = { flex: "1 1 300px", minWidth: 260, maxWidth: 460 };
+const colCanvas = { flex: "2 1 360px", minWidth: 300 };
+
+function CanvasNote({ children }) {
+  return (
+    <div style={{ border: `1px dashed ${C.navyBorder}`, borderRadius: 8, padding: "44px 20px",
+                  textAlign: "center", color: C.textMuted, fontSize: 13, background: C.navy }}>
+      {children}
+    </div>
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Optimise tab — self-contained, owns its local state.
@@ -808,7 +833,7 @@ function OptimiseTab({ model, pyReady, setTab }) {
   return (
     <div>
       <SectionHead>Optimise the section (most economical)</SectionHead>
-      <p style={{ color: C.textMuted, fontSize: 13, marginBottom: 12 }}>
+      <p style={{ color: C.textMuted, fontSize: 13, marginBottom: 16, maxWidth: 820 }}>
         The load case (P = {model.P} kN at {fmt(model.xP, 1)} m, UDL = {model.w} kN/m),
         geometry and material (E = {model.E} GPa) are <em>given</em>. The section must satisfy
         <strong style={{ color: C.textPrimary }}> two limit states</strong> — deflection
@@ -816,69 +841,77 @@ function OptimiseTab({ model, pyReady, setTab }) {
         <code>Z</code>). Whichever is more utilised <strong>governs</strong> the size.
       </p>
 
-      <SliderRow label="Deflection limit δ_lim" value={limit} unit="mm"
-                 min={2} max={50} step={1} onChange={setLimit} />
-      <SliderRow label="Allowable bending stress σ_allow" value={sigAllow} unit="MPa"
-                 min={50} max={400} step={5} onChange={setSigAllow} />
-      <SliderRow label="Current section modulus Z" value={Zsec} unit="cm³"
-                 min={50} max={5000} step={10} onChange={setZsec} />
-
-      <button style={{ ...btnPrimary, ...((!pyReady || busy) ? disabledBtn : {}) }}
-              disabled={!pyReady || busy} onClick={run}>
-        {busy ? "Sizing…" : "Size the section"}
-      </button>
-
-      {err && <p style={{ color: C.red, fontSize: 13, marginTop: 12 }}>{err}</p>}
-
-      {res && (
-        <div>
-          <div style={{ fontSize: 12, color: C.textMuted, margin: "16px 0 6px" }}>
-            SERVICEABILITY — deflection
-          </div>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <StatCard label="Required I (min)" value={fmt(res.I_req, 0)} unit="cm⁴" color={C.teal} />
-            <StatCard label="Current I" value={fmt(res.I_cur, 0)} unit="cm⁴" color={C.blue} />
-            <StatCard label="Current δmax" value={fmt(res.dmax_cur, 2)}
-                      unit={`mm (limit ${fmt(res.dlim, 0)})`} color={C.amber} />
-            <StatCard label="Utilisation" value={fmt(res.util_def * 100, 0)}
-                      unit="% of limit" color={res.pass_def ? C.teal : C.red} />
-          </div>
-
-          <div style={{ fontSize: 12, color: C.textMuted, margin: "16px 0 6px" }}>
-            STRENGTH — bending stress (Mmax = {fmt(res.Mmax, 1)} kN·m)
-          </div>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <StatCard label="Required Z (min)" value={fmt(res.Z_req, 0)} unit="cm³" color={C.teal} />
-            <StatCard label="Current Z" value={fmt(res.Z_cur, 0)} unit="cm³" color={C.blue} />
-            <StatCard label="σmax" value={fmt(res.sigma_max, 1)}
-                      unit={`MPa (allow ${fmt(res.sig_allow, 0)})`} color={C.amber} />
-            <StatCard label="Utilisation" value={fmt(res.util_str * 100, 0)}
-                      unit="% of allow" color={res.pass_str ? C.teal : C.red} />
-          </div>
-
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
-            <StatCard label="Governing limit state" value={res.governs === "deflection" ? "Deflection" : "Strength"}
-                      unit="" color={C.amber} />
-            <StatCard label="Overall verdict" value={res.passes ? "PASS" : "FAIL"} unit=""
-                      color={res.passes ? C.teal : C.red} />
-          </div>
-
-          <p style={{ color: C.textMuted, fontSize: 13, marginTop: 14 }}>
-            The economical section is the smallest one meeting <strong>both</strong> limits:{" "}
-            <strong style={{ color: C.teal }}>I ≥ {fmt(res.I_req, 0)} cm⁴</strong> and{" "}
-            <strong style={{ color: C.teal }}>Z ≥ {fmt(res.Z_req, 0)} cm³</strong>.{" "}
-            <strong style={{ color: res.governs === "deflection" ? C.amber : C.blue }}>
-              {res.governs === "deflection" ? "Deflection" : "Strength"} governs
-            </strong>{" "}
-            ({fmt(Math.max(res.util_def, res.util_str) * 100, 0)}% utilised).{" "}
-            {res.passes
-              ? "Your current section passes both — the spare margin on the governing criterion is how far you could trim it."
-              : "Your current section fails at least one limit — increase the property flagged red."}
-          </p>
+      <div style={twoCol}>
+        <div style={colCtrl}>
+          <SliderRow label="Deflection limit δ_lim" value={limit} unit="mm"
+                     min={2} max={50} step={1} onChange={setLimit} />
+          <SliderRow label="Allowable bending stress σ_allow" value={sigAllow} unit="MPa"
+                     min={50} max={400} step={5} onChange={setSigAllow} />
+          <SliderRow label="Current section modulus Z" value={Zsec} unit="cm³"
+                     min={50} max={5000} step={10} onChange={setZsec} />
+          <button style={{ ...btnPrimary, ...((!pyReady || busy) ? disabledBtn : {}) }}
+                  disabled={!pyReady || busy} onClick={run}>
+            {busy ? "Sizing…" : "Size the section"}
+          </button>
+          {err && <p style={{ color: C.red, fontSize: 13, marginTop: 12 }}>{err}</p>}
         </div>
-      )}
 
-      <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
+        <div style={colCanvas}>
+          {res ? (
+            <div>
+              <div style={{ fontSize: 12, color: C.textMuted, margin: "0 0 6px" }}>
+                SERVICEABILITY — deflection
+              </div>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <StatCard label="Required I (min)" value={fmt(res.I_req, 0)} unit="cm⁴" color={C.teal} />
+                <StatCard label="Current I" value={fmt(res.I_cur, 0)} unit="cm⁴" color={C.blue} />
+                <StatCard label="Current δmax" value={fmt(res.dmax_cur, 2)}
+                          unit={`mm (limit ${fmt(res.dlim, 0)})`} color={C.amber} />
+                <StatCard label="Utilisation" value={fmt(res.util_def * 100, 0)}
+                          unit="% of limit" color={res.pass_def ? C.teal : C.red} />
+              </div>
+
+              <div style={{ fontSize: 12, color: C.textMuted, margin: "16px 0 6px" }}>
+                STRENGTH — bending stress (Mmax = {fmt(res.Mmax, 1)} kN·m)
+              </div>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <StatCard label="Required Z (min)" value={fmt(res.Z_req, 0)} unit="cm³" color={C.teal} />
+                <StatCard label="Current Z" value={fmt(res.Z_cur, 0)} unit="cm³" color={C.blue} />
+                <StatCard label="σmax" value={fmt(res.sigma_max, 1)}
+                          unit={`MPa (allow ${fmt(res.sig_allow, 0)})`} color={C.amber} />
+                <StatCard label="Utilisation" value={fmt(res.util_str * 100, 0)}
+                          unit="% of allow" color={res.pass_str ? C.teal : C.red} />
+              </div>
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+                <StatCard label="Governing limit state" value={res.governs === "deflection" ? "Deflection" : "Strength"}
+                          unit="" color={C.amber} />
+                <StatCard label="Overall verdict" value={res.passes ? "PASS" : "FAIL"} unit=""
+                          color={res.passes ? C.teal : C.red} />
+              </div>
+
+              <p style={{ color: C.textMuted, fontSize: 13, marginTop: 14 }}>
+                The economical section is the smallest one meeting <strong>both</strong> limits:{" "}
+                <strong style={{ color: C.teal }}>I ≥ {fmt(res.I_req, 0)} cm⁴</strong> and{" "}
+                <strong style={{ color: C.teal }}>Z ≥ {fmt(res.Z_req, 0)} cm³</strong>.{" "}
+                <strong style={{ color: res.governs === "deflection" ? C.amber : C.blue }}>
+                  {res.governs === "deflection" ? "Deflection" : "Strength"} governs
+                </strong>{" "}
+                ({fmt(Math.max(res.util_def, res.util_str) * 100, 0)}% utilised).{" "}
+                {res.passes
+                  ? "Your current section passes both — the spare margin on the governing criterion is how far you could trim it."
+                  : "Your current section fails at least one limit — increase the property flagged red."}
+              </p>
+            </div>
+          ) : (
+            <CanvasNote>Set the limits, then press <strong>Size the section</strong> to see the
+              required <code>I</code> and <code>Z</code>, the governing limit state, and whether
+              your section passes.</CanvasNote>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 10, marginTop: 22, flexWrap: "wrap" }}>
         <button style={btnGhost} onClick={() => setTab("results")}>← Results</button>
         <button style={btnGhost} onClick={() => setTab("download")}>Download Notebook →</button>
       </div>
@@ -990,71 +1023,86 @@ function PracticeTab({ pyReady }) {
         </div>
       )}
 
-      {/* Editor */}
-      <textarea value={code} onChange={(e) => setCode(e.target.value)} onKeyDown={onKey}
-                spellCheck={false}
-                style={{
-                  width: "100%", minHeight: 280, resize: "vertical",
-                  background: "#0b121b", color: C.textCode, border: `1px solid ${C.navyBorder}`,
-                  borderRadius: 8, padding: 12, fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 13, lineHeight: 1.5, tabSize: 4,
-                }} />
+      {/* Two-pane: editor (left) + output (right) */}
+      <div style={twoCol}>
+        <div style={{ flex: "1 1 420px", minWidth: 300 }}>
+          <textarea value={code} onChange={(e) => setCode(e.target.value)} onKeyDown={onKey}
+                    spellCheck={false}
+                    style={{
+                      width: "100%", minHeight: 320, resize: "vertical",
+                      background: "#F4F6FA", color: C.textCode, border: `1px solid ${C.navyBorder}`,
+                      borderRadius: 8, padding: 12, fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: 13, lineHeight: 1.5, tabSize: 4, boxSizing: "border-box",
+                    }} />
 
-      <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-        <button style={{ ...btnPrimary, ...((!pyReady || busy) ? disabledBtn : {}) }}
-                disabled={!pyReady || busy} onClick={run}>
-          {busy ? "Running…" : "▶ Run my code"}
-        </button>
-        <button style={btnGhost} onClick={() => setCode(activeStarter)}>↺ Reset</button>
-        <button style={btnGhost} onClick={() => setShowSol((s) => !s)}>
-          {showSol ? "Hide solution" : "💡 Show solution"}
-        </button>
-      </div>
+          <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+            <button style={{ ...btnPrimary, ...((!pyReady || busy) ? disabledBtn : {}) }}
+                    disabled={!pyReady || busy} onClick={run}>
+              {busy ? "Running…" : "▶ Run my code"}
+            </button>
+            <button style={btnGhost} onClick={() => setCode(activeStarter)}>↺ Reset</button>
+            <button style={btnGhost} onClick={() => setShowSol((s) => !s)}>
+              {showSol ? "Hide solution" : "💡 Show solution"}
+            </button>
+          </div>
+        </div>
 
-      {/* Output */}
-      {res && (
-        <div style={{ marginTop: 16 }}>
-          {lastErr ? (
-            <div>
-              <div style={{ color: C.red, fontSize: 13, fontWeight: 700 }}>Error: {lastErr}</div>
-              <details style={{ marginTop: 6 }}>
-                <summary style={{ color: C.textMuted, fontSize: 12, cursor: "pointer" }}>
-                  Full traceback
-                </summary>
-                <pre style={{ background: "#0b121b", border: `1px solid ${C.navyBorder}`,
-                              borderRadius: 6, padding: 12, fontSize: 12, color: C.red,
-                              overflowX: "auto", whiteSpace: "pre-wrap" }}>{res.err}</pre>
-              </details>
-            </div>
+        <div style={{ flex: "1 1 320px", minWidth: 280 }}>
+          {res ? (
+            lastErr ? (
+              <div>
+                <div style={{ color: C.red, fontSize: 13, fontWeight: 700 }}>Error: {lastErr}</div>
+                <details style={{ marginTop: 6 }}>
+                  <summary style={{ color: C.textMuted, fontSize: 12, cursor: "pointer" }}>
+                    Full traceback
+                  </summary>
+                  <pre style={{ background: "#F4F6FA", border: `1px solid ${C.navyBorder}`,
+                                borderRadius: 6, padding: 12, fontSize: 12, color: C.red,
+                                overflowX: "auto", whiteSpace: "pre-wrap" }}>{res.err}</pre>
+                </details>
+              </div>
+            ) : (
+              <div>
+                {res.out && (
+                  <pre style={{ background: "#F4F6FA", border: `1px solid ${C.navyBorder}`,
+                                borderRadius: 6, padding: 12, fontSize: 12.5, color: C.textCode,
+                                overflowX: "auto", whiteSpace: "pre-wrap", marginTop: 0 }}>{res.out}</pre>
+                )}
+                {res.figs.map((b, i) => (
+                  <img key={i} src={"data:image/png;base64," + b} alt="figure"
+                       style={{ width: "100%", borderRadius: 8, marginTop: 10,
+                                border: `1px solid ${C.navyBorder}` }} />
+                ))}
+                {!res.out && res.figs.length === 0 && (
+                  <div style={{ color: C.amber, fontSize: 13 }}>
+                    Ran with no output — did you forget a <code>print()</code>?
+                  </div>
+                )}
+              </div>
+            )
           ) : (
-            <div>
-              {res.out && (
-                <pre style={{ background: "#0b121b", border: `1px solid ${C.navyBorder}`,
-                              borderRadius: 6, padding: 12, fontSize: 12.5, color: C.textCode,
-                              overflowX: "auto", whiteSpace: "pre-wrap" }}>{res.out}</pre>
-              )}
-              {res.figs.map((b, i) => (
-                <img key={i} src={"data:image/png;base64," + b} alt="figure"
-                     style={{ width: "100%", maxWidth: 720, borderRadius: 8, marginTop: 10,
-                              border: `1px solid ${C.navyBorder}` }} />
-              ))}
-              {!res.out && res.figs.length === 0 && (
-                <div style={{ color: C.amber, fontSize: 13 }}>
-                  Ran with no output — did you forget a <code>print()</code>?
-                </div>
-              )}
-            </div>
+            <CanvasNote>Output, plots and errors appear here when you press
+              <strong> ▶ Run my code</strong>.</CanvasNote>
           )}
         </div>
-      )}
+      </div>
 
       {showSol && (
-        <pre style={{ background: "#0b121b", border: `1px solid ${C.teal}`,
+        <pre style={{ background: "#F4F6FA", border: `1px solid ${C.teal}`,
                       borderRadius: 8, padding: 12, fontSize: 13, color: C.textCode,
                       overflowX: "auto", whiteSpace: "pre-wrap", marginTop: 14 }}>{activeSolution}</pre>
       )}
     </div>
   );
+}
+
+/* The tab is reflected in the URL hash (e.g. .../tool#practice) so the course
+   page can deep-link straight to a given section. */
+const TAB_IDS = ["geometry", "loads", "results", "practice", "optimise", "download"];
+function tabFromHash() {
+  if (typeof window === "undefined") return "geometry";
+  const h = (window.location.hash || "").replace(/^#/, "");
+  return TAB_IDS.includes(h) ? h : "geometry";
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1073,7 +1121,12 @@ function BeamAnalysisTool() {
   const [xP, setXP] = useState(5);     // m
   const [w, setW] = useState(10);      // kN/m
   // ui
-  const [tab, setTab] = useState("geometry");
+  const [tab, setTabState] = useState(tabFromHash);
+  // Wrap the setter so every tab change also updates the URL hash (deep-linkable).
+  const setTab = (id) => {
+    setTabState(id);
+    try { window.history.replaceState(null, "", "#" + id); } catch (e) { /* ignore */ }
+  };
   const [pyReady, setPyReady] = useState(false);
   const [pyStatus, setPyStatus] = useState("loading");  // loading | idle | running | error
   const [running, setRunning] = useState(false);
@@ -1091,6 +1144,13 @@ function BeamAnalysisTool() {
       .then(() => { if (alive) { setPyReady(true); setPyStatus("idle"); } })
       .catch((e) => { if (alive) { setPyStatus("error"); setErr(String(e)); } });
     return () => { alive = false; };
+  }, []);
+
+  /* Follow URL-hash changes (e.g. clicking a course-page deep link). */
+  useEffect(() => {
+    const onHash = () => setTabState(tabFromHash());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
   /* ── Constraint-enforcing setters (A < B-0.5, A+0.5 < B ≤ L) ──────────── */
@@ -1143,7 +1203,7 @@ function BeamAnalysisTool() {
 
   const TABS = [
     ["geometry", "▲ Geometry"], ["loads", "⬇ Loads"], ["results", "📊 Results"],
-    ["practice", "✏️ Practice"], ["optimise", "⚖ Optimise"], ["download", "⬇ Download Notebook"],
+    ["practice", "✏️ Practice"], ["optimise", "⚖ Optimise"], ["download", "⬇ Notebook"],
   ];
 
   const wrap = {
@@ -1155,12 +1215,29 @@ function BeamAnalysisTool() {
     <div style={wrap}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
-        #beam-tool-root ::-webkit-scrollbar { height: 6px; }
-        #beam-tool-root ::-webkit-scrollbar-thumb { background: ${C.navyBorder}; border-radius: 3px; }
+        #beam-tool-root ::-webkit-scrollbar { width: 8px; height: 8px; }
+        #beam-tool-root ::-webkit-scrollbar-thumb { background: ${C.navyBorder}; border-radius: 4px; }
+        .ih-shell { display: flex; align-items: stretch; }
+        .ih-sidebar { width: 188px; flex-shrink: 0; background: ${C.navy};
+          border-right: 1px solid ${C.navyBorder}; padding: 12px 0; }
+        .ih-tab { display: block; width: 100%; text-align: left; background: transparent;
+          border: none; border-left: 3px solid transparent; cursor: pointer; font-family: inherit;
+          font-size: 13px; padding: 10px 16px; color: ${C.textMuted}; white-space: nowrap; }
+        .ih-tab:hover { color: ${C.textPrimary}; }
+        .ih-tab.active { color: ${C.teal}; border-left-color: ${C.teal}; font-weight: 600;
+          background: ${C.navyLight}; }
+        .ih-content { flex: 1; min-width: 0; padding: 22px; }
+        @media (max-width: 760px) {
+          .ih-shell { flex-direction: column; }
+          .ih-sidebar { width: 100%; display: flex; overflow-x: auto; padding: 0 8px;
+            border-right: none; border-bottom: 1px solid ${C.navyBorder}; }
+          .ih-tab { width: auto; border-left: none; border-bottom: 2px solid transparent; }
+          .ih-tab.active { border-left: none; border-bottom-color: ${C.teal}; background: transparent; }
+        }
       `}</style>
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div style={{ background: C.navyDeep, borderBottom: `1px solid ${C.navyBorder}`,
+      <div style={{ background: C.navy, borderBottom: `1px solid ${C.navyBorder}`,
                     padding: "14px 22px", display: "flex", justifyContent: "space-between",
                     alignItems: "center", flexWrap: "wrap", gap: 10 }}>
         <div>
@@ -1175,119 +1252,128 @@ function BeamAnalysisTool() {
         </div>
       </div>
 
-      {/* ── Tab bar ────────────────────────────────────────────────────── */}
-      <div style={{ background: C.navyDeep, display: "flex", gap: 4, overflowX: "auto",
-                    borderBottom: `1px solid ${C.navyBorder}`, padding: "0 12px" }}>
-        {TABS.map(([id, label]) => (
-          <button key={id} onClick={() => setTab(id)} style={{
-            background: "transparent", border: "none", cursor: "pointer",
-            fontFamily: "inherit", fontSize: 13, padding: "12px 14px", whiteSpace: "nowrap",
-            color: tab === id ? C.teal : C.textMuted,
-            borderBottom: `2px solid ${tab === id ? C.teal : "transparent"}`,
-          }}>{label}</button>
-        ))}
-      </div>
+      {/* ── Shell: sidebar nav + content ───────────────────────────────── */}
+      <div className="ih-shell">
+        <aside className="ih-sidebar">
+          {TABS.map(([id, label]) => (
+            <button key={id} onClick={() => setTab(id)}
+                    className={"ih-tab" + (tab === id ? " active" : "")}>{label}</button>
+          ))}
+        </aside>
 
-      {/* ── Body ───────────────────────────────────────────────────────── */}
-      <div style={{ maxWidth: 820, margin: "0 auto", padding: "22px" }}>
+        <div className="ih-content">
 
         {/* GEOMETRY ----------------------------------------------------- */}
         {tab === "geometry" && (
-          <div>
-            <SectionHead>Geometry</SectionHead>
-            <SliderRow label="Total length L" value={L} unit="m" min={2} max={20} step={0.5}
-                       onChange={changeL} />
-            <SliderRow label="Pin A position" value={A} unit="m" min={0} max={B - 0.5} step={0.5}
-                       onChange={changeA} />
-            <SliderRow label="Roller B position" value={B} unit="m" min={A + 0.5} max={L} step={0.5}
-                       onChange={changeB} />
+          <div style={twoCol}>
+            <div style={colCtrl}>
+              <SectionHead>Geometry</SectionHead>
+              <SliderRow label="Total length L" value={L} unit="m" min={2} max={20} step={0.5}
+                         onChange={changeL} />
+              <SliderRow label="Pin A position" value={A} unit="m" min={0} max={B - 0.5} step={0.5}
+                         onChange={changeA} />
+              <SliderRow label="Roller B position" value={B} unit="m" min={A + 0.5} max={L} step={0.5}
+                         onChange={changeB} />
 
-            <table style={{ width: "100%", borderCollapse: "collapse", margin: "12px 0",
-                            fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: C.navy }}>
-                  <th style={{ textAlign: "left", padding: "8px 12px",
-                               borderLeft: `3px solid ${C.teal}`, color: C.textPrimary }}>Segment</th>
-                  <th style={{ textAlign: "right", padding: "8px 12px",
-                               color: C.textPrimary }}>Length</th>
-                </tr>
-              </thead>
-              <tbody style={{ color: C.textCode }}>
-                {[["Left cantilever", segLeft], ["Interior span", segSpan],
-                  ["Right cantilever", segRight]].map(([n, v]) => (
-                  <tr key={n} style={{ borderBottom: `1px solid ${C.navyBorder}` }}>
-                    <td style={{ padding: "8px 12px" }}>{n}</td>
-                    <td style={{ padding: "8px 12px", textAlign: "right" }}>{fmt(v, 2)} m</td>
+              <table style={{ width: "100%", borderCollapse: "collapse", margin: "12px 0",
+                              fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: C.navyLight }}>
+                    <th style={{ textAlign: "left", padding: "8px 12px",
+                                 borderLeft: `3px solid ${C.teal}`, color: C.textPrimary }}>Segment</th>
+                    <th style={{ textAlign: "right", padding: "8px 12px",
+                                 color: C.textPrimary }}>Length</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody style={{ color: C.textCode }}>
+                  {[["Left cantilever", segLeft], ["Interior span", segSpan],
+                    ["Right cantilever", segRight]].map(([n, v]) => (
+                    <tr key={n} style={{ borderBottom: `1px solid ${C.navyBorder}` }}>
+                      <td style={{ padding: "8px 12px" }}>{n}</td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}>{fmt(v, 2)} m</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-            <BeamDiagram L={L} A={A} B={B} P={0} xP={xP} w={0} />
+              <button style={{ ...btnPrimary }} onClick={() => setTab("loads")}>
+                Next: Loads →
+              </button>
+            </div>
 
-            <button style={{ ...btnPrimary, marginTop: 14 }} onClick={() => setTab("loads")}>
-              Next: Loads →
-            </button>
+            <div style={colCanvas}>
+              <BeamDiagram L={L} A={A} B={B} P={0} xP={xP} w={0} />
+            </div>
           </div>
         )}
 
         {/* LOADS -------------------------------------------------------- */}
         {tab === "loads" && (
-          <div>
-            <SectionHead>Loads</SectionHead>
-            <SliderRow label="Point load P" value={P} unit="kN" min={0} max={500} step={5}
-                       onChange={setP} />
-            <SliderRow label="Point load position x_P" value={xP} unit="m" min={0} max={L} step={0.5}
-                       onChange={changeXP} />
-            <SliderRow label="UDL w (full span)" value={w} unit="kN/m" min={0} max={100} step={1}
-                       onChange={setW} />
+          <div style={twoCol}>
+            <div style={colCtrl}>
+              <SectionHead>Loads</SectionHead>
+              <SliderRow label="Point load P" value={P} unit="kN" min={0} max={500} step={5}
+                         onChange={setP} />
+              <SliderRow label="Point load position x_P" value={xP} unit="m" min={0} max={L} step={0.5}
+                         onChange={changeXP} />
+              <SliderRow label="UDL w (full span)" value={w} unit="kN/m" min={0} max={100} step={1}
+                         onChange={setW} />
 
-            <SectionHead>Section (for deflection)</SectionHead>
-            <SliderRow label="Young's modulus E" value={E} unit="GPa" min={10} max={400} step={5}
-                       onChange={setE} />
-            <SliderRow label="Second moment I" value={I} unit="cm⁴" min={500} max={50000} step={100}
-                       onChange={setI} />
+              <SectionHead>Section (for deflection)</SectionHead>
+              <SliderRow label="Young's modulus E" value={E} unit="GPa" min={10} max={400} step={5}
+                         onChange={setE} />
+              <SliderRow label="Second moment I" value={I} unit="cm⁴" min={500} max={50000} step={100}
+                         onChange={setI} />
 
-            <BeamDiagram L={L} A={A} B={B} P={P} xP={xP} w={w} />
+              <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+                <button style={btnGhost} onClick={() => setTab("geometry")}>← Geometry</button>
+                <button style={btnPrimary}
+                        onClick={() => { setTab("results"); runAnalysis(); }}>▶ Run Analysis →</button>
+              </div>
+            </div>
 
-            <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-              <button style={btnGhost} onClick={() => setTab("geometry")}>← Geometry</button>
-              <button style={btnPrimary}
-                      onClick={() => { setTab("results"); runAnalysis(); }}>▶ Run Analysis →</button>
+            <div style={colCanvas}>
+              <BeamDiagram L={L} A={A} B={B} P={P} xP={xP} w={w} />
             </div>
           </div>
         )}
 
         {/* RESULTS ------------------------------------------------------ */}
         {tab === "results" && (
-          <div>
-            <SectionHead>Results</SectionHead>
-            <button style={{ ...btnPrimary, ...((!pyReady || running) ? disabledBtn : {}) }}
-                    disabled={!pyReady || running} onClick={runAnalysis}>
-              {running ? "Running…" : (stats ? "↺ Re-run" : "Run Analysis")}
-            </button>
+          <div style={twoCol}>
+            <div style={colCtrl}>
+              <SectionHead>Results</SectionHead>
+              <button style={{ ...btnPrimary, ...((!pyReady || running) ? disabledBtn : {}) }}
+                      disabled={!pyReady || running} onClick={runAnalysis}>
+                {running ? "Running…" : (stats ? "↺ Re-run" : "Run Analysis")}
+              </button>
 
-            {err && <p style={{ color: C.red, fontSize: 13, marginTop: 12 }}>{err}</p>}
+              {err && <p style={{ color: C.red, fontSize: 13, marginTop: 12 }}>{err}</p>}
 
-            {stats && (
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", margin: "18px 0" }}>
-                <StatCard label="Reaction R_A" value={fmt(stats.RA)} unit="kN" color={C.teal} />
-                <StatCard label="Reaction R_B" value={fmt(stats.RB)} unit="kN" color={C.teal} />
-                <StatCard label="|M|max" value={fmt(stats.Mmax)} unit="kN·m" color={C.blue} />
-                <StatCard label="|V|max" value={fmt(stats.Vmax)} unit="kN" color={C.blue} />
-                <StatCard label="δmax" value={fmt(stats.dmax)} unit="mm" color={C.amber} />
+              {stats && (
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", margin: "18px 0" }}>
+                  <StatCard label="Reaction R_A" value={fmt(stats.RA)} unit="kN" color={C.teal} />
+                  <StatCard label="Reaction R_B" value={fmt(stats.RB)} unit="kN" color={C.teal} />
+                  <StatCard label="|M|max" value={fmt(stats.Mmax)} unit="kN·m" color={C.blue} />
+                  <StatCard label="|V|max" value={fmt(stats.Vmax)} unit="kN" color={C.blue} />
+                  <StatCard label="δmax" value={fmt(stats.dmax)} unit="mm" color={C.amber} />
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
+                <button style={btnGhost} onClick={() => setTab("loads")}>← Loads</button>
+                <button style={btnGhost} onClick={() => setTab("optimise")}>Optimise →</button>
               </div>
-            )}
+            </div>
 
-            {plot && (
-              <img src={plot} alt="SFD / BMD / deflection"
-                   style={{ width: "100%", maxWidth: 760, borderRadius: 8,
-                            border: `1px solid ${C.navyBorder}` }} />
-            )}
-
-            <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-              <button style={btnGhost} onClick={() => setTab("loads")}>← Loads</button>
-              <button style={btnGhost} onClick={() => setTab("optimise")}>Optimise →</button>
+            <div style={colCanvas}>
+              {plot
+                ? <img src={plot} alt="SFD / BMD / deflection"
+                       style={{ width: "100%", maxWidth: 760, borderRadius: 8,
+                                border: `1px solid ${C.navyBorder}` }} />
+                : <CanvasNote>{pyReady
+                    ? "Press Run Analysis to see the shear force, bending moment and deflection diagrams."
+                    : "Loading kernel…"}</CanvasNote>}
             </div>
           </div>
         )}
@@ -1302,11 +1388,11 @@ function BeamAnalysisTool() {
 
         {/* DOWNLOAD ----------------------------------------------------- */}
         {tab === "download" && (
-          <div>
+          <div style={{ maxWidth: 560 }}>
             <SectionHead>Download notebook</SectionHead>
             <p style={{ color: C.textMuted, fontSize: 13, marginBottom: 12 }}>
               A self-contained Jupyter notebook with your current model baked in and the
-              full analysis worked through in lesson order.
+              full analysis worked through step by step.
             </p>
             <table style={{ width: "100%", borderCollapse: "collapse", margin: "12px 0",
                             fontSize: 13 }}>
@@ -1329,6 +1415,7 @@ function BeamAnalysisTool() {
           </div>
         )}
 
+        </div>
       </div>
     </div>
   );

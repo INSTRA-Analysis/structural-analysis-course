@@ -1,13 +1,22 @@
 {% extends "base.html" %}
 
 {% block title %}INSTRA Academy — Structural Analysis · Taught Through Code{% endblock %}
+{% block meta_description %}INSTRA Academy — interactive structural analysis courses. Learn Python for structural engineering through hands-on lessons with live diagrams.{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb-bar"><div class="container">
+  <a href="{{ url_for('hub.index') }}">InstraHub</a>
+  <span class="sep">›</span>
+  <span class="current">INSTRA Academy</span>
+</div></nav>
+{% endblock %}
 
 {% block content %}
 
 <!-- ── Hero ────────────────────────────────────────────── -->
 <section class="hero">
   <div class="hero-inner">
-    <span class="hero-eyebrow">Structural Analysis · Python · Interactive</span>
+    <span class="hero-eyebrow">INSTRA Academy · Structural Analysis · Python</span>
 
     <h1>Learn Structural Analysis<br><span>Through Code</span></h1>
 
@@ -17,26 +26,20 @@
     </p>
 
     <div class="hero-actions">
-      <a href="{{ url_for('courses') }}" class="btn btn-primary btn-lg">Explore Courses</a>
-      <a href="{{ url_for('about') }}"   class="btn btn-outline btn-lg">About INSTRA Academy</a>
+      <a href="{{ url_for('academy.courses') }}" class="btn btn-primary btn-lg">Explore Courses</a>
+      <a href="{{ url_for('academy.about') }}"   class="btn btn-outline btn-lg">About the Academy</a>
     </div>
 
-    <!-- Decorative beam SVG -->
     <div class="hero-beam">
       <svg width="600" height="60" viewBox="0 0 600 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Beam -->
         <rect x="20" y="24" width="560" height="8" rx="2" fill="white"/>
-        <!-- Pin support -->
         <polygon points="140,32 120,54 160,54" fill="white"/>
-        <!-- Roller -->
         <polygon points="460,32 440,54 480,54" fill="white"/>
         <circle cx="450" cy="57" r="4" fill="white"/>
         <circle cx="460" cy="57" r="4" fill="white"/>
         <circle cx="470" cy="57" r="4" fill="white"/>
-        <!-- Point load arrow -->
         <line x1="300" y1="4" x2="300" y2="24" stroke="white" stroke-width="2"/>
         <polygon points="300,24 294,10 306,10" fill="white"/>
-        <!-- UDL arrows -->
         <line x1="180" y1="8" x2="180" y2="24" stroke="white" stroke-width="1.5"/>
         <line x1="220" y1="8" x2="220" y2="24" stroke="white" stroke-width="1.5"/>
         <line x1="260" y1="8" x2="260" y2="24" stroke="white" stroke-width="1.5"/>
@@ -83,7 +86,7 @@
       <h2>Start Learning Today</h2>
       <p style="max-width:520px; margin-top:0.5rem;">
         Each course is self-contained, interactive, and free to start.
-        More courses are in development — sign up to be notified.
+        More courses are in development.
       </p>
     </div>
 
@@ -110,10 +113,10 @@
 
         <div class="card-footer">
           <span class="card-meta">
-            {% if course.lessons %}{{ course.lessons }} lessons · {{ course.duration }}{% else %}In development{% endif %}
+            {% if course.status == 'available' %}{{ course.format }} · {{ course.duration }}{% else %}In development{% endif %}
           </span>
           {% if course.status == 'available' %}
-            <a href="{{ url_for('course_beam') }}" class="btn btn-navy">Open →</a>
+            <a href="{{ url_for('academy.course_beam') }}" class="btn btn-navy">Open →</a>
           {% else %}
             <span class="badge badge-muted">Notify me</span>
           {% endif %}
@@ -130,7 +133,7 @@
   <div class="container">
     <div class="section-header text-center">
       <p class="section-label">The Method</p>
-      <h2>How Each Lesson Works</h2>
+      <h2>How the Course Works</h2>
     </div>
 
     <div class="grid-3">
@@ -146,7 +149,7 @@
       </div>
       <div style="text-align:center; padding: 1.5rem;">
         <div style="font-size:3rem; margin-bottom:1rem;">03</div>
-        <h3>Check & Extend</h3>
+        <h3>Check &amp; Extend</h3>
         <p>Compare your code with the worked solution. Then try changing the numbers — break it, fix it, make it yours.</p>
       </div>
     </div>
@@ -157,7 +160,7 @@
 <section class="cta-banner">
   <h2>Start for Free Today</h2>
   <p>No account needed — just open the first lesson and start coding.</p>
-  <a href="{{ url_for('course_beam') }}" class="btn btn-primary btn-lg">Open Simply Supported Beam Course</a>
+  <a href="{{ url_for('academy.course_beam') }}" class="btn btn-primary btn-lg">Open Simply Supported Beam Course</a>
 </section>
 
 {% endblock %}

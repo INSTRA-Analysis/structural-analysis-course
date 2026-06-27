@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}About — InstraHub{% endblock %}
+{% block meta_description %}InstraHub is a structural engineering platform — interactive courses, apps, and services, built by practising structural engineers.{% endblock %}
+
+{% block content %}
+
+<section class="about-hero">
+  <div class="container">
+    <p class="section-label" style="color:var(--gold);">About</p>
+    <h1>Structural Engineering, Taught &amp; Tooled</h1>
+    <p>
+      InstraHub is a platform for structural engineers — bringing interactive learning,
+      practical software, and services together in one place.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid-2" style="align-items:start; gap:4rem;">
+      <div>
+        <p class="section-label">Mission</p>
+        <h2 style="margin-bottom:1rem;">Why InstraHub Exists</h2>
+        <p style="margin-bottom:1rem;">
+          Most structural engineering software is a black box: numbers go in, diagrams
+          come out, and the <em>why</em> stays hidden. InstraHub exists to change that —
+          starting with education and extending to the tools engineers use every day.
+        </p>
+        <p>
+          The platform is built by practising structural engineers, grounded in real
+          project experience and academic rigour.
+        </p>
+      </div>
+      <div>
+        <p class="section-label">The Strands</p>
+        <h2 style="margin-bottom:1rem;">One Platform, Three Strands</h2>
+        <ul style="list-style:none; padding:0; color:var(--text-muted); line-height:1.9;">
+          <li><strong style="color:var(--text);">INSTRA Academy</strong> — interactive
+              courses that teach analysis through code. <a href="{{ url_for('academy.home') }}">Live now →</a></li>
+          <li><strong style="color:var(--text);">Apps &amp; Platform</strong> — standalone
+              engineering tools and apps. <em>In development.</em></li>
+          <li><strong style="color:var(--text);">Services</strong> — consulting and bespoke
+              software. <em>Coming soon.</em></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <h2>Start with the Academy</h2>
+  <p>The first course is free and runs entirely in your browser. No account required.</p>
+  <a href="{{ url_for('academy.course_beam') }}" class="btn btn-primary btn-lg">Open the Beam Course →</a>
+</section>
+
+{% endblock %}

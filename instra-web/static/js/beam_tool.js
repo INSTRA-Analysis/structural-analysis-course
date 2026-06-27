@@ -27,25 +27,25 @@ const {
 
 /* ── Design tokens — the single source of colour for the whole tool ──────── */
 const C = {
-  navyDeep: "#0f1923",
-  // page background
-  navy: "#1a2332",
+  navyDeep: "#F5F7FA",
+  // page background (light, matches the site)
+  navy: "#FFFFFF",
   // card / panel background
-  navyLight: "#243044",
-  // input / stat card background
-  navyBorder: "#2e3d52",
+  navyLight: "#EEF1F6",
+  // input / stat card / beam fill background
+  navyBorder: "#E0E4EC",
   // all borders
-  teal: "#1abc9c",
-  // primary accent, supports, idle state
-  amber: "#f39c12",
-  // run button, deflection, UDL
+  teal: "#1A2B4A",
+  // primary accent (brand navy): supports, active tab, reactions, headings
+  amber: "#C8972B",
+  // call-to-action (brand gold): run/download buttons, UDL, deflection accent
   red: "#C0392B",
   // point loads, errors, tension
   blue: "#2471A3",
   // shear force, compression
-  textPrimary: "#e8edf3",
-  textMuted: "#7f8fa4",
-  textCode: "#c9d8ed"
+  textPrimary: "#1A1A2E",
+  textMuted: "#5A6070",
+  textCode: "#243660"
 };
 const PY_INDEX_URL = "https://cdn.jsdelivr.net/pyodide/v0.27.6/full/";
 
@@ -117,27 +117,29 @@ stats = {"RA": float(RA), "RB": float(RB),
          "Mmax": _amax(M), "Vmax": _amax(V), "dmax": _amax(defl)}
 
 # ── Dark, three-panel figure (SFD / BMD / deflection) ──────────────────────
-NAVY_BG, PANEL, GRID, TICK = "#0f1923", "#1a2332", "#2e3d52", "#7f8fa4"
+NAVY_BG, PANEL, GRID, TICK = "#FFFFFF", "#FFFFFF", "#E0E4EC", "#5A6070"
 fig, axes = plt.subplots(3, 1, figsize=(7.6, 8.4), facecolor=NAVY_BG)
 panels = [
     (axes[0], V,    "Shear Force V (kN)",      "#2471A3"),
-    (axes[1], M,    "Bending Moment M (kN.m)", "#1abc9c"),
-    (axes[2], defl, "Deflection d (mm)",       "#f39c12"),
+    (axes[1], M,    "Bending Moment M (kN.m)", "#1B7A4B"),
+    (axes[2], defl, "Deflection d (mm)",       "#E67E22"),
 ]
 for ax, y, label, color in panels:
     ax.set_facecolor(PANEL)
     ax.plot(x, y, color=color, lw=2)
     ax.axhline(0, color=GRID, lw=1)
     for xs_ in (float(A), float(B)):
-        ax.axvline(xs_, color="#1abc9c", ls="--", lw=1, alpha=0.6)
+        ax.axvline(xs_, color="#1A2B4A", ls="--", lw=1, alpha=0.55)
     if P != 0:
         ax.axvline(float(xP), color="#C0392B", ls=":", lw=1, alpha=0.75)
     ax.set_ylabel(label, color=TICK, fontsize=9)
-    ax.grid(True, color=GRID, alpha=0.4, lw=0.6)
+    ax.grid(True, color=GRID, alpha=0.8, lw=0.6)
     ax.tick_params(colors=TICK, labelsize=8)
     for spine in ax.spines.values():
         spine.set_color(GRID)
 axes[2].set_xlabel("Position x (m)", color=TICK, fontsize=9)
+# BMD convention: draw sagging (positive) moment downward (tension side).
+axes[1].invert_yaxis()
 fig.tight_layout()
 
 buf = io.BytesIO()
@@ -485,7 +487,7 @@ fig, ax = plt.subplots(figsize=(8, 3))
 ax.plot(res["x"], defl, color="#E65100", lw=2)
 ax.axhline(0, color="k", lw=0.8)
 for xs in (geometry["x_A"], geometry["x_B"]):
-    ax.axvline(xs, color="#1abc9c", ls="--", lw=1)
+    ax.axvline(xs, color="#1A2B4A", ls="--", lw=1)
 ax.set_xlabel("x (m)"); ax.set_ylabel("deflection (mm)")
 ax.set_title("Deflection")
 plt.show()
@@ -513,7 +515,7 @@ fig, ax = plt.subplots(figsize=(8, 3))
 ax.plot(res["x"], defl, color="#E65100", lw=2)
 ax.axhline(0, color="k", lw=0.8)
 for xs in (geometry["x_A"], geometry["x_B"]):
-    ax.axvline(xs, color="#1abc9c", ls="--", lw=1)
+    ax.axvline(xs, color="#1A2B4A", ls="--", lw=1)
 ax.set_xlabel("x (m)"); ax.set_ylabel("deflection (mm)")
 ax.set_title("Deflection")
 plt.show()
@@ -646,6 +648,30 @@ const fmt = (v, n = 2) => Number.isFinite(v) ? v.toFixed(n) : "—";
 /* ═══════════════════════════════════════════════════════════════════════════
    SVG beam diagram — pure SVG, no libraries. Spec from BEAM_TOOL_BRIEF.
    ═══════════════════════════════════════════════════════════════════════════ */
+/* A downward arrow drawn as explicit geometry: a vertical shaft plus a filled
+   triangular head whose apex sits at yTip. No SVG markers / orient="auto", so it
+   always points straight down and is trivial to place and resize. */
+function DownArrow({
+  x,
+  yTop,
+  yTip,
+  color,
+  width = 2,
+  head = 8
+}) {
+  const hw = head * 0.6; // head half-width
+  return /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("line", {
+    x1: x,
+    y1: yTop,
+    x2: x,
+    y2: yTip - head,
+    stroke: color,
+    strokeWidth: width
+  }), /*#__PURE__*/React.createElement("polygon", {
+    points: `${x},${yTip} ${x - hw},${yTip - head} ${x + hw},${yTip - head}`,
+    fill: color
+  }));
+}
 function BeamDiagram({
   L,
   A,
@@ -671,15 +697,14 @@ function BeamDiagram({
   if (w > 0) {
     for (let i = 0; i < 7; i++) {
       const ax = padL + beamW * i / 6;
-      udlArrows.push(/*#__PURE__*/React.createElement("line", {
+      udlArrows.push(/*#__PURE__*/React.createElement(DownArrow, {
         key: `u${i}`,
-        x1: ax,
-        y1: beamY - 28,
-        x2: ax,
-        y2: beamY - 8,
-        stroke: C.amber,
-        strokeWidth: "1.5",
-        markerEnd: "url(#udlhead)"
+        x: ax,
+        yTop: beamY - 28,
+        yTip: beamY - 7,
+        color: C.amber,
+        width: 1.5,
+        head: 6
       }));
     }
   }
@@ -687,30 +712,10 @@ function BeamDiagram({
     viewBox: `0 0 ${W} ${H}`,
     width: "100%",
     style: {
-      maxWidth: W,
+      maxWidth: 720,
       display: "block"
     }
-  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("marker", {
-    id: "plhead",
-    markerWidth: "9",
-    markerHeight: "9",
-    refX: "4.5",
-    refY: "8",
-    orient: "auto"
-  }, /*#__PURE__*/React.createElement("path", {
-    d: "M0,0 L9,0 L4.5,9 z",
-    fill: C.red
-  })), /*#__PURE__*/React.createElement("marker", {
-    id: "udlhead",
-    markerWidth: "8",
-    markerHeight: "8",
-    refX: "4",
-    refY: "7",
-    orient: "auto"
-  }, /*#__PURE__*/React.createElement("path", {
-    d: "M0,0 L8,0 L4,8 z",
-    fill: C.amber
-  }))), A > 0 && /*#__PURE__*/React.createElement("rect", {
+  }, A > 0 && /*#__PURE__*/React.createElement("rect", {
     x: padL,
     y: 60,
     width: xA - padL,
@@ -728,8 +733,8 @@ function BeamDiagram({
     width: beamW,
     height: 10,
     rx: 2,
-    fill: C.navyLight,
-    stroke: C.navyBorder
+    fill: "#D3DAE5",
+    stroke: "#A9B4C6"
   }), w > 0 && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("line", {
     x1: padL,
     y1: beamY - 28,
@@ -743,14 +748,13 @@ function BeamDiagram({
     textAnchor: "middle",
     fill: C.amber,
     fontSize: "11"
-  }, w, " kN/m")), P > 0 && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("line", {
-    x1: xPp,
-    y1: beamY - 35,
-    x2: xPp,
-    y2: beamY - 6,
-    stroke: C.red,
-    strokeWidth: "2.5",
-    markerEnd: "url(#plhead)"
+  }, w, " kN/m")), P > 0 && /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement(DownArrow, {
+    x: xPp,
+    yTop: beamY - 35,
+    yTip: beamY - 5,
+    color: C.red,
+    width: 2.5,
+    head: 9
   }), /*#__PURE__*/React.createElement("text", {
     x: xPp,
     y: beamY - 40,
@@ -856,7 +860,7 @@ function SliderRow({
       display: "flex",
       justifyContent: "space-between",
       fontSize: 10,
-      color: C.navyBorder
+      color: C.textMuted
     }
   }, /*#__PURE__*/React.createElement("span", null, min), /*#__PURE__*/React.createElement("span", null, max)));
 }
@@ -896,7 +900,7 @@ function StatCard({
 }
 const btnPrimary = {
   background: C.amber,
-  color: C.navyDeep,
+  color: "#1A1A2E",
   fontWeight: 700,
   border: "none",
   borderRadius: 6,
@@ -919,6 +923,40 @@ const disabledBtn = {
   opacity: 0.45,
   cursor: "not-allowed"
 };
+
+/* ── Two-pane layout helpers: controls (left) + canvas (right) ───────────────
+   Used across tabs so the tool fills wide screens; wraps to a single column on
+   narrow viewports (flexWrap). */
+const twoCol = {
+  display: "flex",
+  gap: 24,
+  alignItems: "flex-start",
+  flexWrap: "wrap"
+};
+const colCtrl = {
+  flex: "1 1 300px",
+  minWidth: 260,
+  maxWidth: 460
+};
+const colCanvas = {
+  flex: "2 1 360px",
+  minWidth: 300
+};
+function CanvasNote({
+  children
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      border: `1px dashed ${C.navyBorder}`,
+      borderRadius: 8,
+      padding: "44px 20px",
+      textAlign: "center",
+      color: C.textMuted,
+      fontSize: 13,
+      background: C.navy
+    }
+  }, children);
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Optimise tab — self-contained, owns its local state.
@@ -954,13 +992,18 @@ function OptimiseTab({
     style: {
       color: C.textMuted,
       fontSize: 13,
-      marginBottom: 12
+      marginBottom: 16,
+      maxWidth: 820
     }
   }, "The load case (P = ", model.P, " kN at ", fmt(model.xP, 1), " m, UDL = ", model.w, " kN/m), geometry and material (E = ", model.E, " GPa) are ", /*#__PURE__*/React.createElement("em", null, "given"), ". The section must satisfy", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: C.textPrimary
     }
-  }, " two limit states"), " — deflection (needs enough ", /*#__PURE__*/React.createElement("code", null, "I"), ") and bending strength (needs enough section modulus", " ", /*#__PURE__*/React.createElement("code", null, "Z"), "). Whichever is more utilised ", /*#__PURE__*/React.createElement("strong", null, "governs"), " the size."), /*#__PURE__*/React.createElement(SliderRow, {
+  }, " two limit states"), " — deflection (needs enough ", /*#__PURE__*/React.createElement("code", null, "I"), ") and bending strength (needs enough section modulus", " ", /*#__PURE__*/React.createElement("code", null, "Z"), "). Whichever is more utilised ", /*#__PURE__*/React.createElement("strong", null, "governs"), " the size."), /*#__PURE__*/React.createElement("div", {
+    style: twoCol
+  }, /*#__PURE__*/React.createElement("div", {
+    style: colCtrl
+  }, /*#__PURE__*/React.createElement(SliderRow, {
     label: "Deflection limit δ_lim",
     value: limit,
     unit: "mm",
@@ -997,11 +1040,13 @@ function OptimiseTab({
       fontSize: 13,
       marginTop: 12
     }
-  }, err), res && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, err)), /*#__PURE__*/React.createElement("div", {
+    style: colCanvas
+  }, res ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
       color: C.textMuted,
-      margin: "16px 0 6px"
+      margin: "0 0 6px"
     }
   }, "SERVICEABILITY — deflection"), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1096,11 +1141,12 @@ function OptimiseTab({
     style: {
       color: res.governs === "deflection" ? C.amber : C.blue
     }
-  }, res.governs === "deflection" ? "Deflection" : "Strength", " governs"), " ", "(", fmt(Math.max(res.util_def, res.util_str) * 100, 0), "% utilised).", " ", res.passes ? "Your current section passes both — the spare margin on the governing criterion is how far you could trim it." : "Your current section fails at least one limit — increase the property flagged red.")), /*#__PURE__*/React.createElement("div", {
+  }, res.governs === "deflection" ? "Deflection" : "Strength", " governs"), " ", "(", fmt(Math.max(res.util_def, res.util_str) * 100, 0), "% utilised).", " ", res.passes ? "Your current section passes both — the spare margin on the governing criterion is how far you could trim it." : "Your current section fails at least one limit — increase the property flagged red.")) : /*#__PURE__*/React.createElement(CanvasNote, null, "Set the limits, then press ", /*#__PURE__*/React.createElement("strong", null, "Size the section"), " to see the required ", /*#__PURE__*/React.createElement("code", null, "I"), " and ", /*#__PURE__*/React.createElement("code", null, "Z"), ", the governing limit state, and whether your section passes."))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 10,
-      marginTop: 22
+      marginTop: 22,
+      flexWrap: "wrap"
     }
   }, /*#__PURE__*/React.createElement("button", {
     style: btnGhost,
@@ -1255,16 +1301,23 @@ function PracticeTab({
       color: i === varIdx ? C.teal : C.textMuted,
       borderBottom: `2px solid ${i === varIdx ? C.teal : "transparent"}`
     }
-  }, v.label))), /*#__PURE__*/React.createElement("textarea", {
+  }, v.label))), /*#__PURE__*/React.createElement("div", {
+    style: twoCol
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: "1 1 420px",
+      minWidth: 300
+    }
+  }, /*#__PURE__*/React.createElement("textarea", {
     value: code,
     onChange: e => setCode(e.target.value),
     onKeyDown: onKey,
     spellCheck: false,
     style: {
       width: "100%",
-      minHeight: 280,
+      minHeight: 320,
       resize: "vertical",
-      background: "#0b121b",
+      background: "#F4F6FA",
       color: C.textCode,
       border: `1px solid ${C.navyBorder}`,
       borderRadius: 8,
@@ -1272,7 +1325,8 @@ function PracticeTab({
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 13,
       lineHeight: 1.5,
-      tabSize: 4
+      tabSize: 4,
+      boxSizing: "border-box"
     }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1294,11 +1348,12 @@ function PracticeTab({
   }, "↺ Reset"), /*#__PURE__*/React.createElement("button", {
     style: btnGhost,
     onClick: () => setShowSol(s => !s)
-  }, showSol ? "Hide solution" : "💡 Show solution")), res && /*#__PURE__*/React.createElement("div", {
+  }, showSol ? "Hide solution" : "💡 Show solution"))), /*#__PURE__*/React.createElement("div", {
     style: {
-      marginTop: 16
+      flex: "1 1 320px",
+      minWidth: 280
     }
-  }, lastErr ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, res ? lastErr ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       color: C.red,
       fontSize: 13,
@@ -1316,7 +1371,7 @@ function PracticeTab({
     }
   }, "Full traceback"), /*#__PURE__*/React.createElement("pre", {
     style: {
-      background: "#0b121b",
+      background: "#F4F6FA",
       border: `1px solid ${C.navyBorder}`,
       borderRadius: 6,
       padding: 12,
@@ -1327,14 +1382,15 @@ function PracticeTab({
     }
   }, res.err))) : /*#__PURE__*/React.createElement("div", null, res.out && /*#__PURE__*/React.createElement("pre", {
     style: {
-      background: "#0b121b",
+      background: "#F4F6FA",
       border: `1px solid ${C.navyBorder}`,
       borderRadius: 6,
       padding: 12,
       fontSize: 12.5,
       color: C.textCode,
       overflowX: "auto",
-      whiteSpace: "pre-wrap"
+      whiteSpace: "pre-wrap",
+      marginTop: 0
     }
   }, res.out), res.figs.map((b, i) => /*#__PURE__*/React.createElement("img", {
     key: i,
@@ -1342,7 +1398,6 @@ function PracticeTab({
     alt: "figure",
     style: {
       width: "100%",
-      maxWidth: 720,
       borderRadius: 8,
       marginTop: 10,
       border: `1px solid ${C.navyBorder}`
@@ -1352,9 +1407,9 @@ function PracticeTab({
       color: C.amber,
       fontSize: 13
     }
-  }, "Ran with no output — did you forget a ", /*#__PURE__*/React.createElement("code", null, "print()"), "?"))), showSol && /*#__PURE__*/React.createElement("pre", {
+  }, "Ran with no output — did you forget a ", /*#__PURE__*/React.createElement("code", null, "print()"), "?")) : /*#__PURE__*/React.createElement(CanvasNote, null, "Output, plots and errors appear here when you press", /*#__PURE__*/React.createElement("strong", null, " ▶ Run my code"), "."))), showSol && /*#__PURE__*/React.createElement("pre", {
     style: {
-      background: "#0b121b",
+      background: "#F4F6FA",
       border: `1px solid ${C.teal}`,
       borderRadius: 8,
       padding: 12,
@@ -1365,6 +1420,15 @@ function PracticeTab({
       marginTop: 14
     }
   }, activeSolution));
+}
+
+/* The tab is reflected in the URL hash (e.g. .../tool#practice) so the course
+   page can deep-link straight to a given section. */
+const TAB_IDS = ["geometry", "loads", "results", "practice", "optimise", "download"];
+function tabFromHash() {
+  if (typeof window === "undefined") return "geometry";
+  const h = (window.location.hash || "").replace(/^#/, "");
+  return TAB_IDS.includes(h) ? h : "geometry";
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1383,7 +1447,14 @@ function BeamAnalysisTool() {
   const [xP, setXP] = useState(5); // m
   const [w, setW] = useState(10); // kN/m
   // ui
-  const [tab, setTab] = useState("geometry");
+  const [tab, setTabState] = useState(tabFromHash);
+  // Wrap the setter so every tab change also updates the URL hash (deep-linkable).
+  const setTab = id => {
+    setTabState(id);
+    try {
+      window.history.replaceState(null, "", "#" + id);
+    } catch (e) {/* ignore */}
+  };
   const [pyReady, setPyReady] = useState(false);
   const [pyStatus, setPyStatus] = useState("loading"); // loading | idle | running | error
   const [running, setRunning] = useState(false);
@@ -1419,6 +1490,13 @@ function BeamAnalysisTool() {
     return () => {
       alive = false;
     };
+  }, []);
+
+  /* Follow URL-hash changes (e.g. clicking a course-page deep link). */
+  useEffect(() => {
+    const onHash = () => setTabState(tabFromHash());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
   /* ── Constraint-enforcing setters (A < B-0.5, A+0.5 < B ≤ L) ──────────── */
@@ -1489,7 +1567,7 @@ function BeamAnalysisTool() {
     running: "Running…",
     error: "Kernel error"
   }[pyStatus];
-  const TABS = [["geometry", "▲ Geometry"], ["loads", "⬇ Loads"], ["results", "📊 Results"], ["practice", "✏️ Practice"], ["optimise", "⚖ Optimise"], ["download", "⬇ Download Notebook"]];
+  const TABS = [["geometry", "▲ Geometry"], ["loads", "⬇ Loads"], ["results", "📊 Results"], ["practice", "✏️ Practice"], ["optimise", "⚖ Optimise"], ["download", "⬇ Notebook"]];
   const wrap = {
     fontFamily: "'JetBrains Mono', monospace",
     color: C.textPrimary,
@@ -1500,11 +1578,28 @@ function BeamAnalysisTool() {
     style: wrap
   }, /*#__PURE__*/React.createElement("style", null, `
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
-        #beam-tool-root ::-webkit-scrollbar { height: 6px; }
-        #beam-tool-root ::-webkit-scrollbar-thumb { background: ${C.navyBorder}; border-radius: 3px; }
+        #beam-tool-root ::-webkit-scrollbar { width: 8px; height: 8px; }
+        #beam-tool-root ::-webkit-scrollbar-thumb { background: ${C.navyBorder}; border-radius: 4px; }
+        .ih-shell { display: flex; align-items: stretch; }
+        .ih-sidebar { width: 188px; flex-shrink: 0; background: ${C.navy};
+          border-right: 1px solid ${C.navyBorder}; padding: 12px 0; }
+        .ih-tab { display: block; width: 100%; text-align: left; background: transparent;
+          border: none; border-left: 3px solid transparent; cursor: pointer; font-family: inherit;
+          font-size: 13px; padding: 10px 16px; color: ${C.textMuted}; white-space: nowrap; }
+        .ih-tab:hover { color: ${C.textPrimary}; }
+        .ih-tab.active { color: ${C.teal}; border-left-color: ${C.teal}; font-weight: 600;
+          background: ${C.navyLight}; }
+        .ih-content { flex: 1; min-width: 0; padding: 22px; }
+        @media (max-width: 760px) {
+          .ih-shell { flex-direction: column; }
+          .ih-sidebar { width: 100%; display: flex; overflow-x: auto; padding: 0 8px;
+            border-right: none; border-bottom: 1px solid ${C.navyBorder}; }
+          .ih-tab { width: auto; border-left: none; border-bottom: 2px solid transparent; }
+          .ih-tab.active { border-left: none; border-bottom-color: ${C.teal}; background: transparent; }
+        }
       `), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: C.navyDeep,
+      background: C.navy,
       borderBottom: `1px solid ${C.navyBorder}`,
       padding: "14px 22px",
       display: "flex",
@@ -1540,35 +1635,20 @@ function BeamAnalysisTool() {
       display: "inline-block"
     }
   }), dotLabel)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: C.navyDeep,
-      display: "flex",
-      gap: 4,
-      overflowX: "auto",
-      borderBottom: `1px solid ${C.navyBorder}`,
-      padding: "0 12px"
-    }
+    className: "ih-shell"
+  }, /*#__PURE__*/React.createElement("aside", {
+    className: "ih-sidebar"
   }, TABS.map(([id, label]) => /*#__PURE__*/React.createElement("button", {
     key: id,
     onClick: () => setTab(id),
-    style: {
-      background: "transparent",
-      border: "none",
-      cursor: "pointer",
-      fontFamily: "inherit",
-      fontSize: 13,
-      padding: "12px 14px",
-      whiteSpace: "nowrap",
-      color: tab === id ? C.teal : C.textMuted,
-      borderBottom: `2px solid ${tab === id ? C.teal : "transparent"}`
-    }
+    className: "ih-tab" + (tab === id ? " active" : "")
   }, label))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      maxWidth: 820,
-      margin: "0 auto",
-      padding: "22px"
-    }
-  }, tab === "geometry" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SectionHead, null, "Geometry"), /*#__PURE__*/React.createElement(SliderRow, {
+    className: "ih-content"
+  }, tab === "geometry" && /*#__PURE__*/React.createElement("div", {
+    style: twoCol
+  }, /*#__PURE__*/React.createElement("div", {
+    style: colCtrl
+  }, /*#__PURE__*/React.createElement(SectionHead, null, "Geometry"), /*#__PURE__*/React.createElement(SliderRow, {
     label: "Total length L",
     value: L,
     unit: "m",
@@ -1601,7 +1681,7 @@ function BeamAnalysisTool() {
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
     style: {
-      background: C.navy
+      background: C.navyLight
     }
   }, /*#__PURE__*/React.createElement("th", {
     style: {
@@ -1634,20 +1714,25 @@ function BeamAnalysisTool() {
       padding: "8px 12px",
       textAlign: "right"
     }
-  }, fmt(v, 2), " m"))))), /*#__PURE__*/React.createElement(BeamDiagram, {
+  }, fmt(v, 2), " m"))))), /*#__PURE__*/React.createElement("button", {
+    style: {
+      ...btnPrimary
+    },
+    onClick: () => setTab("loads")
+  }, "Next: Loads →")), /*#__PURE__*/React.createElement("div", {
+    style: colCanvas
+  }, /*#__PURE__*/React.createElement(BeamDiagram, {
     L: L,
     A: A,
     B: B,
     P: 0,
     xP: xP,
     w: 0
-  }), /*#__PURE__*/React.createElement("button", {
-    style: {
-      ...btnPrimary,
-      marginTop: 14
-    },
-    onClick: () => setTab("loads")
-  }, "Next: Loads →")), tab === "loads" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SectionHead, null, "Loads"), /*#__PURE__*/React.createElement(SliderRow, {
+  }))), tab === "loads" && /*#__PURE__*/React.createElement("div", {
+    style: twoCol
+  }, /*#__PURE__*/React.createElement("div", {
+    style: colCtrl
+  }, /*#__PURE__*/React.createElement(SectionHead, null, "Loads"), /*#__PURE__*/React.createElement(SliderRow, {
     label: "Point load P",
     value: P,
     unit: "kN",
@@ -1687,18 +1772,12 @@ function BeamAnalysisTool() {
     max: 50000,
     step: 100,
     onChange: setI
-  }), /*#__PURE__*/React.createElement(BeamDiagram, {
-    L: L,
-    A: A,
-    B: B,
-    P: P,
-    xP: xP,
-    w: w
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 10,
-      marginTop: 14
+      marginTop: 14,
+      flexWrap: "wrap"
     }
   }, /*#__PURE__*/React.createElement("button", {
     style: btnGhost,
@@ -1709,7 +1788,20 @@ function BeamAnalysisTool() {
       setTab("results");
       runAnalysis();
     }
-  }, "▶ Run Analysis →"))), tab === "results" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SectionHead, null, "Results"), /*#__PURE__*/React.createElement("button", {
+  }, "▶ Run Analysis →"))), /*#__PURE__*/React.createElement("div", {
+    style: colCanvas
+  }, /*#__PURE__*/React.createElement(BeamDiagram, {
+    L: L,
+    A: A,
+    B: B,
+    P: P,
+    xP: xP,
+    w: w
+  }))), tab === "results" && /*#__PURE__*/React.createElement("div", {
+    style: twoCol
+  }, /*#__PURE__*/React.createElement("div", {
+    style: colCtrl
+  }, /*#__PURE__*/React.createElement(SectionHead, null, "Results"), /*#__PURE__*/React.createElement("button", {
     style: {
       ...btnPrimary,
       ...(!pyReady || running ? disabledBtn : {})
@@ -1754,7 +1846,22 @@ function BeamAnalysisTool() {
     value: fmt(stats.dmax),
     unit: "mm",
     color: C.amber
-  })), plot && /*#__PURE__*/React.createElement("img", {
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 10,
+      marginTop: 18,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    style: btnGhost,
+    onClick: () => setTab("loads")
+  }, "← Loads"), /*#__PURE__*/React.createElement("button", {
+    style: btnGhost,
+    onClick: () => setTab("optimise")
+  }, "Optimise →"))), /*#__PURE__*/React.createElement("div", {
+    style: colCanvas
+  }, plot ? /*#__PURE__*/React.createElement("img", {
     src: plot,
     alt: "SFD / BMD / deflection",
     style: {
@@ -1763,31 +1870,23 @@ function BeamAnalysisTool() {
       borderRadius: 8,
       border: `1px solid ${C.navyBorder}`
     }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 10,
-      marginTop: 18
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    style: btnGhost,
-    onClick: () => setTab("loads")
-  }, "← Loads"), /*#__PURE__*/React.createElement("button", {
-    style: btnGhost,
-    onClick: () => setTab("optimise")
-  }, "Optimise →"))), tab === "practice" && /*#__PURE__*/React.createElement(PracticeTab, {
+  }) : /*#__PURE__*/React.createElement(CanvasNote, null, pyReady ? "Press Run Analysis to see the shear force, bending moment and deflection diagrams." : "Loading kernel…"))), tab === "practice" && /*#__PURE__*/React.createElement(PracticeTab, {
     pyReady: pyReady
   }), tab === "optimise" && /*#__PURE__*/React.createElement(OptimiseTab, {
     model: model,
     pyReady: pyReady,
     setTab: setTab
-  }), tab === "download" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SectionHead, null, "Download notebook"), /*#__PURE__*/React.createElement("p", {
+  }), tab === "download" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 560
+    }
+  }, /*#__PURE__*/React.createElement(SectionHead, null, "Download notebook"), /*#__PURE__*/React.createElement("p", {
     style: {
       color: C.textMuted,
       fontSize: 13,
       marginBottom: 12
     }
-  }, "A self-contained Jupyter notebook with your current model baked in and the full analysis worked through in lesson order."), /*#__PURE__*/React.createElement("table", {
+  }, "A self-contained Jupyter notebook with your current model baked in and the full analysis worked through step by step."), /*#__PURE__*/React.createElement("table", {
     style: {
       width: "100%",
       borderCollapse: "collapse",
@@ -1827,7 +1926,7 @@ function BeamAnalysisTool() {
   }, /*#__PURE__*/React.createElement("button", {
     style: btnGhost,
     onClick: () => setTab("optimise")
-  }, "← Optimise")))));
+  }, "← Optimise"))))));
 }
 
 /* ── Mount ───────────────────────────────────────────────────────────────── */

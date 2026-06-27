@@ -3,9 +3,18 @@
 {% block title %}Courses — INSTRA Academy{% endblock %}
 {% block meta_description %}Interactive structural analysis courses. Learn Python for structural engineering through hands-on lessons with live diagrams.{% endblock %}
 
+{% block breadcrumb %}
+<nav class="breadcrumb-bar"><div class="container">
+  <a href="{{ url_for('hub.index') }}">InstraHub</a>
+  <span class="sep">›</span>
+  <a href="{{ url_for('academy.home') }}">INSTRA Academy</a>
+  <span class="sep">›</span>
+  <span class="current">Courses</span>
+</div></nav>
+{% endblock %}
+
 {% block content %}
 
-<!-- ── Page header ──────────────────────────────────── -->
 <section class="page-hero">
   <div class="container">
     <p class="section-label">All Courses</p>
@@ -14,7 +23,6 @@
   </div>
 </section>
 
-<!-- ── Progression note ──────────────────────────────── -->
 <section class="section-sm" style="background:var(--bg-card); border-bottom:1px solid var(--border);">
   <div class="container">
     <p style="max-width:760px; margin:0 auto; text-align:center; color:var(--text-muted); font-size:0.95rem;">
@@ -24,7 +32,6 @@
   </div>
 </section>
 
-<!-- ── Course grid ───────────────────────────────────── -->
 <section class="section">
   <div class="container">
 
@@ -68,8 +75,8 @@
 
         <div class="card-footer">
           {% if course.status == 'available' %}
-            <span class="card-meta">{{ course.lessons }} lessons · {{ course.duration }}</span>
-            <a href="{{ url_for('course_beam') }}" class="btn btn-navy">Open →</a>
+            <span class="card-meta">{{ course.format }} · {{ course.duration }}</span>
+            <a href="{{ url_for('academy.course_beam') }}" class="btn btn-navy">Open →</a>
           {% else %}
             <span class="card-meta">In development</span>
             <span class="badge badge-muted">Notify me</span>
@@ -89,11 +96,10 @@
   </div>
 </section>
 
-<!-- ── CTA ───────────────────────────────────────────── -->
 <section class="cta-banner">
   <h2>Ready to start?</h2>
   <p>The Simply Supported Beam course is free, interactive, and takes you from zero to a full analysis tool.</p>
-  <a href="{{ url_for('course_beam') }}" class="btn btn-primary btn-lg">Start the First Lesson →</a>
+  <a href="{{ url_for('academy.course_beam') }}" class="btn btn-primary btn-lg">Start the First Lesson →</a>
 </section>
 
 {% endblock %}

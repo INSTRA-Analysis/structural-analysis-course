@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Simply Supported Beam Analysis — INSTRA Academy{% endblock %}
+{% block meta_description %}Interactive in-browser beam analysis course for structural engineers — reactions, shear, bending moment and deflection, plus hands-on Python practice.{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb-bar"><div class="container">
+  <a href="{{ url_for('hub.index') }}">InstraHub</a>
+  <span class="sep">›</span>
+  <a href="{{ url_for('academy.home') }}">INSTRA Academy</a>
+  <span class="sep">›</span>
+  <a href="{{ url_for('academy.courses') }}">Courses</a>
+  <span class="sep">›</span>
+  <span class="current">Simply Supported Beam</span>
+</div></nav>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Course hero ───────────────────────────────────── -->
+<section class="course-hero">
+  <div class="container">
+
+    <span class="badge badge-gold" style="margin-bottom:1rem; display:inline-block;">Free Course</span>
+    <h1>Simply Supported Beam Analysis</h1>
+    <p style="color:rgba(255,255,255,0.72); max-width:620px; font-size:1.05rem; margin-top:0.75rem;">
+      Build a complete beam analysis tool in Python — from reading geometry to plotting
+      shear and moment diagrams. Live interactive widgets throughout.
+    </p>
+
+    <div class="course-hero-meta">
+      <span class="meta-item"><span class="icon">🧰</span> Interactive tool</span>
+      <span class="meta-item"><span class="icon">⏱</span> ~2 hours</span>
+      <span class="meta-item"><span class="icon">📊</span> Beginner</span>
+      <span class="meta-item"><span class="icon">🐍</span> Python · NumPy · Matplotlib</span>
+    </div>
+
+    <div style="margin-top:2rem; display:flex; gap:1rem; flex-wrap:wrap;">
+      <a href="{{ url_for('academy.course_beam_tool') }}" class="btn btn-primary btn-lg">Launch the Tool →</a>
+      <a href="#how" class="btn btn-outline">See How It Works</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── What you'll learn ─────────────────────────────── -->
+<section class="section" style="background: var(--bg-card); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Learning Outcomes</p>
+      <h2>What You Will Build</h2>
+      <p style="margin-top:0.5rem;">By the end of this course you will have written a parametric beam analysis tool — from scratch, in Python.</p>
+    </div>
+
+    <div class="learn-grid">
+      {% for topic in course.topics %}
+      <div class="learn-item">
+        <span class="learn-check">✦</span>
+        <span>{{ topic }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── How the course works ──────────────────────────── -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">How the course works</p>
+      <h2>One Interactive Tool — Six Steps</h2>
+      <p style="margin-top:0.5rem;">
+        Everything runs in your browser (Python via Pyodide — no installs). Explore with
+        sliders first, then write the Python behind it yourself.
+      </p>
+    </div>
+
+    <div class="lesson-list">
+      {% set steps = [
+        ("01", "geometry", "▲ Geometry", "Set total length and support positions",
+         "The beam diagram, segments and overhangs update live as you drag.", "Explore", "badge-gold"),
+        ("02", "loads", "⬇ Loads", "Add a point load and a UDL, set the section (E, I)",
+         "Load arrows are drawn on the beam with the correct sign convention.", "Explore", "badge-muted"),
+        ("03", "results", "📊 Results", "Run the analysis in one click",
+         "Support reactions, shear, bending moment and deflection — with diagrams.", "Analyse", "badge-muted"),
+        ("04", "practice", "✏️ Practice", "Write Python in the browser, with instant feedback",
+         "Fill-in-the-blank geometry and reactions, call the solver, then an optional build-it-yourself challenge.", "Code", "badge-navy"),
+        ("05", "optimise", "⚖ Optimise", "Size the most economical section",
+         "The smallest section that satisfies both the deflection and bending-strength limits.", "Design", "badge-muted"),
+        ("06", "download", "⬇ Download", "Take your work with you",
+         "Export a self-contained Jupyter notebook with your model and the full worked analysis.", "Export", "badge-muted"),
+      ] %}
+
+      {% for num, tabid, title, summary, detail, badge, badge_class in steps %}
+      <a class="lesson-item" href="{{ url_for('academy.course_beam_tool') }}#{{ tabid }}">
+        <div class="lesson-num">{{ num }}</div>
+        <div>
+          <div class="lesson-title">{{ title }} — {{ summary }}</div>
+          <div class="lesson-sub">{{ detail }}</div>
+        </div>
+        <span class="badge {{ badge_class }}">{{ badge }}</span>
+      </a>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Launch the tool ────────────────────────────── -->
+<section class="cta-banner" id="course-app" style="padding: 5rem 2rem;">
+  <div style="max-width: 460px; margin: 0 auto; text-align: center;">
+    <div style="font-size: 3rem; margin-bottom: 1rem;">📐</div>
+    <h2 style="color: #fff; margin-bottom: 0.75rem;">Open the analysis tool</h2>
+    <p style="color: rgba(255,255,255,0.75); margin-bottom: 2rem; font-size: 1.05rem;">
+      Free and runs entirely in your browser — reactions, shear, bending moment
+      and deflection, plus a downloadable Jupyter notebook. No sign-up required.
+    </p>
+
+    <a href="{{ url_for('academy.course_beam_tool') }}" class="btn btn-primary btn-lg"
+       style="font-size:1.05rem; padding:0.9rem 2rem; justify-content:center;">
+      Launch the Tool →
+    </a>
+  </div>
+</section>
+
+{% endblock %}
