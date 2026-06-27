@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}StructLab — 2D/3D Structural Analysis · InstraHub{% endblock %}
+{% block meta_description %}StructLab by InstraHub — a free Windows desktop app for 2D/3D structural analysis using the Direct Stiffness Method, with EC2/EC3 design checks. Download for Windows.{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb-bar"><div class="container">
+  <a href="{{ url_for('hub.index') }}">InstraHub</a>
+  <span class="sep">›</span>
+  <a href="{{ url_for('hub.apps') }}">Apps</a>
+  <span class="sep">›</span>
+  <span class="current">{{ app.name }}</span>
+</div></nav>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ──────────────────────────────────────────── -->
+<section class="course-hero">
+  <div class="container">
+    <span class="badge badge-gold" style="margin-bottom:1rem; display:inline-block;">Free &amp; open source</span>
+    <h1>{{ app.name }} <span style="font-size:0.5em; font-weight:500; opacity:0.75;">{{ app.badge }}</span></h1>
+    <p style="color:rgba(255,255,255,0.75); max-width:640px; font-size:1.05rem; margin-top:0.75rem;">
+      {{ app.tagline }}
+    </p>
+
+    <div class="course-hero-meta">
+      <span class="meta-item"><span class="icon">🖥️</span> {{ app.platform }} standalone</span>
+      <span class="meta-item"><span class="icon">🏷️</span> {{ app.version }}</span>
+      <span class="meta-item"><span class="icon">⚖️</span> GPL-3.0</span>
+      <span class="meta-item"><span class="icon">🐍</span> No Python required</span>
+    </div>
+
+    <div style="margin-top:2rem; display:flex; gap:1rem; flex-wrap:wrap;">
+      <a href="{{ app.releases_url }}" class="btn btn-primary btn-lg" rel="noopener" target="_blank">⬇ Download for Windows</a>
+      <a href="{{ app.repo_url }}" class="btn btn-outline" rel="noopener" target="_blank">View on GitHub</a>
+    </div>
+    <p style="margin-top:1rem; font-size:0.85rem; color:rgba(255,255,255,0.55);">
+      Windows standalone — download, extract, and run <code>StructLab.exe</code>.
+    </p>
+  </div>
+</section>
+
+<!-- ── What it does ──────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Capabilities</p>
+      <h2>One Solver for Frames, Beams &amp; Trusses</h2>
+      <p style="max-width:620px; margin-top:0.5rem;">
+        A unified Direct Stiffness Method engine — 2D and 3D, auto-detecting, validated
+        against OpenSeesPy and analytical solutions to 0.00% error across 20 benchmarks.
+      </p>
+    </div>
+
+    <div class="values-grid">
+      <div class="value-card">
+        <div class="icon">🧮</div>
+        <h4>Solver Engine</h4>
+        <p>Unified 2D/3D DSM (3 or 6 DOF/node). Frame, beam, truss and bar elements with pin
+           releases. EN 1990 ULS/SLS combinations, EN 1992 pattern loading, point/UDL/UVL and
+           partial-span loads, and max/min envelopes across all combinations.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">🧊</div>
+        <h4>3D Modelling</h4>
+        <p>Blender-inspired workflow — <strong>G</strong> to grab, <strong>E</strong> to extrude —
+           with numpad view shortcuts, an Autodesk-style ViewCube, middle-mouse orbit/pan, and
+           XY/XZ/YZ working planes.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">📈</div>
+        <h4>Results &amp; Diagrams</h4>
+        <p>Inline BMD / SFD / AFD and deformed-shape overlays with peak labels, a 9-column member
+           forces table, and full 6-DOF result tables in 3D (dx…θz, Fx…Mz).</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">✅</div>
+        <h4>Design Checks</h4>
+        <p>Steel to EC3 (elastic &amp; plastic bending, η = M/M<sub>Rd</sub>) and concrete to
+           EC2 §6.1 (rectangular section capacity with reinforcement), plus a European steel
+           section database (IPE, HEA, HEB).</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">⚡</div>
+        <h4>19 Presets &amp; Wizards</h4>
+        <p>Ready-to-run models: simply supported / continuous / cantilever beams, portal and
+           multi-storey frames, Pratt 2D/3D trusses, RC and composite specials, and 3D grids.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">🎯</div>
+        <h4>Validated</h4>
+        <p>Benchmarked against OpenSeesPy and closed-form solutions — 0.00% error across 20 test
+           cases — so you can trust the numbers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Install ───────────────────────────────────────── -->
+<section class="section" style="background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Getting started</p>
+      <h2>Install in Three Steps</h2>
+    </div>
+    <div class="grid-3">
+      <div style="text-align:center; padding:1.5rem;">
+        <div style="font-size:3rem; margin-bottom:1rem;">01</div>
+        <h3>Download</h3>
+        <p>Grab the latest <strong>{{ app.platform }}</strong> zip from the GitHub release.</p>
+      </div>
+      <div style="text-align:center; padding:1.5rem;">
+        <div style="font-size:3rem; margin-bottom:1rem;">02</div>
+        <h3>Extract</h3>
+        <p>Unzip it anywhere — no installer, no admin rights, no Python.</p>
+      </div>
+      <div style="text-align:center; padding:1.5rem;">
+        <div style="font-size:3rem; margin-bottom:1rem;">03</div>
+        <h3>Run</h3>
+        <p>Launch <code>StructLab.exe</code> and open a preset to start modelling.</p>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:1rem;">
+      <a href="{{ app.releases_url }}" class="btn btn-primary btn-lg" rel="noopener" target="_blank">⬇ Download for Windows</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Details ───────────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="grid-2" style="align-items:start; gap:3rem;">
+      <div>
+        <p class="section-label">Requirements</p>
+        <h3 style="margin-bottom:0.75rem;">System</h3>
+        <ul style="list-style:none; padding:0; color:var(--text-muted); line-height:1.9;">
+          <li>• Windows 10 / 11 (64-bit)</li>
+          <li>• Standalone build — no Python or dependencies to install</li>
+          <li>• Current release: <strong style="color:var(--text);">{{ app.version }}</strong></li>
+        </ul>
+      </div>
+      <div>
+        <p class="section-label">Open source</p>
+        <h3 style="margin-bottom:0.75rem;">Licence &amp; source</h3>
+        <p style="margin-bottom:0.75rem;">
+          StructLab is released under the <strong>GNU GPL-3.0</strong> licence — free to use,
+          study, and share.
+        </p>
+        <p>
+          <a href="{{ app.repo_url }}" rel="noopener" target="_blank" style="color:var(--gold);">Source on GitHub →</a><br>
+          <a href="{{ app.releases_url }}" rel="noopener" target="_blank" style="color:var(--gold);">Release notes &amp; downloads →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────── -->
+<section class="cta-banner">
+  <h2>Get StructLab</h2>
+  <p>Free, open source, and ready to run on Windows.</p>
+  <a href="{{ app.releases_url }}" class="btn btn-primary btn-lg" rel="noopener" target="_blank">⬇ Download for Windows</a>
+</section>
+
+{% endblock %}

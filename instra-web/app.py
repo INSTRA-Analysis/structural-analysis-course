@@ -164,6 +164,26 @@ COURSES = [
 ]
 
 
+# ── InstraHub Apps catalogue ────────────────────────────────────────────────
+# Native/desktop apps surfaced on InstraHub; the binaries are hosted on GitHub
+# Releases (InstraHub is the storefront/landing, GitHub hosts the download).
+STRUCTLAB = {
+    "slug":         "structlab",
+    "name":         "StructLab",
+    "badge":        "by InstraHub",
+    "tagline":      ("A 2D/3D structural analysis desktop app built on the Direct Stiffness "
+                     "Method — frames, beams, trusses and design checks in one unified solver."),
+    "version":      "v1.0.0",
+    "platform":     "Windows",
+    "license":      "GPL-3.0 · Free & open source",
+    "repo_url":     "https://github.com/INSTRA-Analysis/StructLabApp",
+    "releases_url": "https://github.com/INSTRA-Analysis/StructLabApp/releases/latest",
+    "status":       "available",
+}
+
+APPS = [STRUCTLAB]
+
+
 # ════════════════════════════════════════════════════════════════════════════
 # Hub blueprint — the InstraHub platform
 # ════════════════════════════════════════════════════════════════════════════
@@ -182,13 +202,12 @@ def about():
 
 @hub.route("/apps")
 def apps():
-    return render_template(
-        "hub/coming_soon.html",
-        eyebrow="InstraHub · Apps & Platform",
-        title="Apps & Platform",
-        blurb=("Standalone structural engineering apps — analysis tools, calculators "
-               "and utilities — released and hosted here. In development."),
-    )
+    return render_template("hub/apps.html", apps=APPS)
+
+
+@hub.route("/apps/structlab")
+def structlab():
+    return render_template("hub/structlab.html", app=STRUCTLAB)
 
 
 @hub.route("/services")

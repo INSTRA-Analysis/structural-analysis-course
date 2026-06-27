@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Apps — InstraHub{% endblock %}
+{% block meta_description %}InstraHub apps — standalone structural engineering software, including StructLab, a 2D/3D Direct Stiffness Method analysis application.{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb-bar"><div class="container">
+  <a href="{{ url_for('hub.index') }}">InstraHub</a>
+  <span class="sep">›</span>
+  <span class="current">Apps</span>
+</div></nav>
+{% endblock %}
+
+{% block content %}
+
+<section class="page-hero">
+  <div class="container">
+    <p class="section-label">InstraHub · Apps</p>
+    <h1>Engineering Apps</h1>
+    <p>Standalone structural engineering software — built by practising engineers,
+       released and hosted here.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid-3">
+
+      {% for app in apps %}
+      <div class="card">
+        <div class="card-header">
+          <div class="card-level">Desktop · {{ app.platform }}</div>
+          <h3>{{ app.name }} <span style="font-size:0.7em; font-weight:500; color:var(--text-light);">{{ app.badge }}</span></h3>
+        </div>
+        <div class="card-body">
+          <p>{{ app.tagline }}</p>
+          <div class="card-tags">
+            <span class="badge badge-gold">Free</span>
+            <span class="badge badge-navy">DSM</span>
+            <span class="badge badge-navy">2D / 3D</span>
+            <span class="badge badge-navy">EC2 / EC3</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-meta">{{ app.version }} · {{ app.platform }}</span>
+          <a href="{{ url_for('hub.structlab') }}" class="btn btn-navy">Open →</a>
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="card coming-soon" style="opacity:0.82;">
+        <div class="card-header muted">
+          <span class="coming-soon-label">Coming Soon</span>
+          <div class="card-level">In development</div>
+          <h3>More apps</h3>
+        </div>
+        <div class="card-body">
+          <p>Further analysis tools, calculators and utilities are on the way.</p>
+          <div class="card-tags">
+            <span class="badge badge-muted">Tools</span>
+            <span class="badge badge-muted">Calculators</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span class="card-meta">In development</span>
+          <span class="badge badge-muted">Soon</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}
